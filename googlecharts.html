@@ -113,9 +113,9 @@
         // Optional request to return only column C and the sum of column B, grouped by C members.
         // startDate ? query.setQuery(`select A, E where D = date '${startDate}'`) : query.setQuery('select A, E');
         // startDate ? query.setQuery(`select A, B where D > date '${startDate}'`) : query.setQuery('select A, B');
-        startDate ? (endDate ? (query.setQuery(`select A, B where D > date '${startDate}' and D <= date '${endDate}'`))
-                             : query.setQuery(`select A, B where D > date '${startDate}'`))
-                  : query.setQuery('select A, B');
+        startDate ? (endDate ? (query.setQuery(`select A, B where D > date '${startDate}' and D <= date '${endDate}' limit 10`))
+                             : query.setQuery(`select A, B where D > date '${startDate}' limit 10`))
+                  : query.setQuery('select A, B limit 10');
 
         // Send the query with a callback function.
         query.send(handleQueryResponse);
@@ -187,14 +187,16 @@
           alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
           return;
         }
-        var options = {'title':'Bus Utilization',
-                       'width':300,
-                       'height':250};
-
-        var pie_options = {'title':'Bus Utilization',
+        var options = {'title':'Top 10 Bus Utilization',
                        'width':300,
                        'height':250,
-                       pieHole: 0.9};
+                       'background-color': '#05f5fd'};
+
+        var pie_options = {'title':'Top 10 Bus Utilization',
+                       'width':300,
+                       'height':250,
+                       'legend': 'left',
+                       'pieHole': 0.9};
 
         var data = response.getDataTable();
         var pie_chart = new google.visualization.PieChart(document.getElementById('pie_chart_div'));
