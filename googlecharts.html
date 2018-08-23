@@ -1,0 +1,426 @@
+<html>
+  <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!--Load the AJAX API-->
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+        <script>
+      var dashboardDate;
+      var prevbutton = 'date_today';
+      // alert (`select COUNT(A) where D = date '${dashboardDate}'`);
+
+      function setDashboardDate(dateRange, div_id) {
+        // alert(dateRange);
+
+        document.getElementById(prevbutton).style.backgroundColor = 'white';
+        document.getElementById(prevbutton).style.color = 'black';
+
+        prevbutton = div_id;
+
+        document.getElementById(div_id).style.backgroundColor = '#2eacde';
+        document.getElementById(div_id).style.color = 'white';
+
+        let selectedRange = new Date();
+
+        switch(dateRange) {
+          case 'dttoday':
+                selectedRange.setDate(selectedRange.getDate() - 1);
+                hideCustomDates()
+                break;
+          case 'dtthisweek':
+                selectedRange.setDate(selectedRange.getDate() - 7);
+                hideCustomDates()
+                break;
+          case 'dtthismonth':
+                selectedRange.setDate(selectedRange.getDate() - 30);
+                hideCustomDates()
+                break;
+          case 'dtcustomdates':
+                showCustomDates();
+                break;
+          default:
+        }
+        
+        let dateString = selectedRange.toISOString().slice(0,10);
+        // alert('values to be shown > ' + dateString);
+        document.getElementById('selected_date_range').innerHTML = 'Data since "' + dateString + '"';
+        google.charts.setOnLoadCallback(initialize(dateString));
+      }
+
+      function showCustomDates() {
+        var x = document.getElementById("custom-dates");
+        x.style.display = "flex";
+        watchDateChange();
+      }
+
+      function hideCustomDates() {
+        var x = document.getElementById("custom-dates");
+        x.style.display = "none";
+
+        document.getElementById('message_for_custom_date').innerHTML = null;
+
+        stopWatchingDateChange();
+      }
+
+      function watchDateChange() {
+        document.getElementById("filter_start_date").addEventListener("change", dateListener);
+
+        document.getElementById("filter_end_date").addEventListener("change", dateListener);
+      }
+
+      function dateListener() {
+            var input = this.value;
+            var dateEntered = new Date(input);
+            // alert(input); //e.g. 2015-11-13
+            // alert(dateEntered); //e.g. Fri Nov 13 2015 00:00:00 GMT+0000 (GMT Standard Time)
+
+            if(input){
+              document.getElementById('message_for_custom_date').innerHTML = null;
+            }
+      }     
+
+      function stopWatchingDateChange() {
+        document.getElementById("filter_start_date").removeEventListener("change", dateListener);
+
+        document.getElementById("filter_end_date").removeEventListener("change", dateListener);
+      }
+
+      function customDateSubmitted() {
+        var filterStartDate = document.getElementById("filter_start_date").value;
+        var filterEndDate = document.getElementById("filter_end_date").value;
+
+        if (!(filterStartDate) || !(filterEndDate)) {
+            document.getElementById('message_for_custom_date').innerHTML = "Please select Start and End dates!";
+        } 
+        else {
+          document.getElementById('selected_date_range').innerHTML = 'Data since "' + filterStartDate + '" until "' + filterEndDate + '"';
+        google.charts.setOnLoadCallback(initialize(filterStartDate, filterEndDate));        
+        }
+      }    
+
+    // Load the Visualization API and the corechart package.
+      google.charts.load('current', {'packages':['corechart','table']});
+
+      // document.getElementById("custom-dates").style.display = "none";
+
+      // Set a callback to run when the Google Visualization API is loaded.
+      google.charts.setOnLoadCallback(initialize);
+
+      function initialize(startDate, endDate) {
+        var opts = {sendMethod: 'auto'};
+        // Replace the data source URL on next line with your data source URL.
+        var query = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1hGAzIxgDo996ccpNUbZLdjStEbX5zQGl-9QrUQkIjew/edit?usp=sharing', opts);
+
+        // Optional request to return only column C and the sum of column B, grouped by C members.
+        // startDate ? query.setQuery(`select A, E where D = date '${startDate}'`) : query.setQuery('select A, E');
+        // startDate ? query.setQuery(`select A, B where D > date '${startDate}'`) : query.setQuery('select A, B');
+        startDate ? (endDate ? (query.setQuery(`select A, B where D > date '${startDate}' and D <= date '${endDate}'`))
+                             : query.setQuery(`select A, B where D > date '${startDate}'`))
+                  : query.setQuery('select A, B');
+
+        // Send the query with a callback function.
+        query.send(handleQueryResponse);
+
+        var tablequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1hGAzIxgDo996ccpNUbZLdjStEbX5zQGl-9QrUQkIjew/edit?usp=sharing', opts);
+
+        // startDate ? tablequery.setQuery(`select A,B,C,D,E where D > date '${startDate}'`): tablequery.setQuery('select A,B,C,D,E');
+        startDate ? (endDate ? (tablequery.setQuery(`select A,B,C,D,E where D > date '${startDate}' and D <= date '${endDate}'`))
+                             : tablequery.setQuery(`select A,B,C,D,E where D > date '${startDate}'`))
+                  : tablequery.setQuery('select A,B,C,D,E');
+        //tablequery.setQuery('select A,B,C,D,E');
+
+        // Send the query with a callback function.
+        tablequery.send(handleTableQueryResponse);
+
+        // Replace the data source URL on next line with your data source URL.
+        // var servicequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1hGAzIxgDo996ccpNUbZLdjStEbX5zQGl-9QrUQkIjew/edit?usp=sharing', opts);
+        var servicequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView-2018-08-21', opts);
+        
+        // startDate ? servicequery.setQuery(`select COUNT(A) where D > date '${startDate}'`) : servicequery.setQuery('select COUNT(A)');
+        servicequery.setQuery('select COUNT(A)');
+
+        // Send the query with a callback function.
+        servicequery.send(handleServiceQueryResponse);
+
+        // Replace the data source URL on next line with your data source URL.
+        // var passengerquery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1hGAzIxgDo996ccpNUbZLdjStEbX5zQGl-9QrUQkIjew/edit?usp=sharing', opts);
+        var passengerquery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView-2018-08-21', opts);
+
+        // startDate ? passengerquery.setQuery(`select SUM(B) where D > date '${startDate}'`) : passengerquery.setQuery('select SUM(B)');
+        passengerquery.setQuery('select SUM(C)');
+
+        // Send the query with a callback function.
+        passengerquery.send(handlePassengerQueryResponse);
+
+        var busyroutequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView-2018-08-21', opts);
+
+        // startDate ? busyroutequery.setQuery(`select A, MAX(B) where D > date '${startDate}' group by A`) : busyroutequery.setQuery('select A, MAX(B) group by A');
+        busyroutequery.setQuery('select A, MAX(C) group by A order by MAX(C) desc');
+
+        // Send the query with a callback function.
+        busyroutequery.send(handleBusyRouteQueryResponse);
+
+        var crowdedstopquery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=StopView-2018-08-21', opts);
+
+        // startDate ? busyroutequery.setQuery(`select A, MAX(B) where D > date '${startDate}' group by A`) : busyroutequery.setQuery('select A, MAX(B) group by A');
+        crowdedstopquery.setQuery('select A, MAX(E) group by A order by MAX(E) desc');
+
+        // Send the query with a callback function.
+        crowdedstopquery.send(handleCrowdedStopQueryResponse);
+
+        var revenueroutequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView-2018-08-21&headers=1', opts);
+
+        // startDate ? busyroutequery.setQuery(`select A, MAX(B) where D > date '${startDate}' group by A`) : busyroutequery.setQuery('select A, MAX(B) group by A');
+        revenueroutequery.setQuery('select A, MAX(E) group by A order by MAX(E) desc');
+
+        // Send the query with a callback function.
+        revenueroutequery.send(handleRevenueRouteQueryResponse);
+
+      }
+
+      function numberWithCommas(x) {
+        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      }
+
+      function handleQueryResponse(response) {
+
+        if (response.isError()) {
+          alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
+          return;
+        }
+        var options = {'title':'Bus Utilization',
+                       'width':300,
+                       'height':250};
+
+        var pie_options = {'title':'Bus Utilization',
+                       'width':300,
+                       'height':250,
+                       pieHole: 0.9};
+
+        var data = response.getDataTable();
+        var pie_chart = new google.visualization.PieChart(document.getElementById('pie_chart_div'));
+        var bar_chart = new google.visualization.BarChart(document.getElementById('bar_chart_div'));
+        var line_chart = new google.visualization.LineChart(document.getElementById('line_chart_div'));
+        var column_chart = new google.visualization.ColumnChart(document.getElementById('column_chart_div'));
+
+        pie_chart.draw(data, pie_options);
+        bar_chart.draw(data, options);
+        line_chart.draw(data, options);
+        column_chart.draw(data, options);
+
+       }
+
+      function handleTableQueryResponse(response) {
+        if (response.isError()) {
+          alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
+          return;
+        }
+        var table_options = {'title':'Bus Utilization',
+                       'width':1200,
+                       'height':220,
+                       };
+
+        var tabledata = response.getDataTable();
+
+        var table = new google.visualization.Table(document.getElementById('table_div'));
+
+        table.draw(tabledata, table_options);
+      }
+
+      function handleServiceQueryResponse(response) {
+
+        if (response.isError()) {
+          alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
+          return;
+        }
+        var serviceoptions = {'title':'Bus Utilization',
+                      'width':250,
+                      'height':200};
+
+        var servicedata = response.getDataTable();
+        
+        document.getElementById('buses_in_service').innerHTML = servicedata.getValue(0,0)
+      }
+
+      function handlePassengerQueryResponse(response) {
+
+        if (response.isError()) {
+          alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
+          return;
+        }
+        var passengeroptions = {'title':'Bus Utilization',
+                      'width':250,
+                      'height':200};
+
+        var passengerdata = response.getDataTable();
+
+        document.getElementById('total_passengers').innerHTML = numberWithCommas(passengerdata.getValue(0,0));
+      }
+
+      function handleCrowdedStopQueryResponse(response) {
+
+        if (response.isError()) {
+          alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
+          return;
+        }
+        var crowdedstopoptions = {'title':'Bus Utilization',
+                      'width':250,
+                      'height':200};
+
+        var crowdedstopdata = response.getDataTable();
+
+        // document.getElementById('most_busy_route').innerHTML = crowdedstopdata.getValue(0,0);
+        document.getElementById('most_crowded_stop').innerHTML = crowdedstopdata.getValue(0,0);
+        
+      }
+
+      function handleBusyRouteQueryResponse(response) {
+
+          if (response.isError()) {
+            alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
+            return;
+          }
+          var busyrouteoptions = {'title':'Bus Utilization',
+                        'width':250,
+                        'height':200};
+
+          var busyroutedata = response.getDataTable();
+
+          document.getElementById('most_busy_route').innerHTML = busyroutedata.getValue(0,0);
+          // document.getElementById('most_crowded_stop').innerHTML = 'Ameerpet';
+
+      }
+
+      function handleRevenueRouteQueryResponse(response) {
+
+          if (response.isError()) {
+            alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
+            return;
+          }
+          var revenuerouteoptions = {'title':'Bus Utilization',
+                        'width':250,
+                        'height':200};
+
+          var revenueroutedata = response.getDataTable();
+
+          document.getElementById('most_revenue_route').innerHTML = '&#8377;' + numberWithCommas(revenueroutedata.getValue(0,1))
+           + '/-<br><span style="font-size:24"}>(Route #: ' + revenueroutedata.getValue(0,0) + ')</span>';
+          // document.getElementById('most_crowded_stop').innerHTML = 'Ameerpet';
+
+      }
+
+</script>
+</head>
+<link rel="stylesheet" type="text/css" href="googlecharts.css"/>
+  </head>
+
+  <body>
+    <!--Div that will hold the pie chart-->
+  <div class="main-container">
+      <div class="header-container">
+            <p id="selected_date_range">Showing All Data</p>
+      </div>
+      <div class="dashboard-container">
+        <div class = "data-container">
+          <div class="highlights-container">
+                  <div class="summary-card">
+                    <div id="total_in_service_div">
+                      <p id="buses_in_service_title"><U>Total Buses In Service</U><br><br><span id="buses_in_service" class="summary_metric">calculating...</span></p>
+                      <!-- <p id="buses_in_service">buses in service</p> -->
+                    </div>
+                  </div>
+                  <div class="summary-card" style="--summarybgcolor: greenyellow; --summarytextcolor: black">
+                    <div id="total_passengers_div">
+                      <p id="total_passengers_title"><U>Total Passengers</U><br><br><span id="total_passengers" class="summary_metric">calculating...</span></p>
+                      <!-- <p id="total_passengers">Total Passengers</p> -->
+                    </div>
+                  </div>
+                  <div class="summary-card" style="--summarybgcolor: blue; --summarytextcolor: white">
+                    <div id="most_crowded_stop_div">
+                      <p id="most_crowded_stop_title"><U>Most Crowded Stop</U><br><br><span id="most_crowded_stop" class="summary_metric">calculating...</span></p>
+                      <!-- <p id="most_crowded_stop">Most Crowded Stop</p> -->
+                    </div>
+                  </div>
+                  <div class="summary-card" style="--summarybgcolor: rgb(124, 30, 93); --summarytextcolor: white">
+                      <div id="most_busy_route_div">
+                        <p id="most_busy_route_title"><U>Most Busy Route</U><br><br><span id="most_busy_route" class="summary_metric">calculating...</span></p><br><br>
+                        <!-- <p id="most_busy_route">Most Busy Route</p> -->
+                      </div>
+                  </div>
+                  <div class="summary-card" style="--summarybgcolor: rgb(3, 88, 109); --summarytextcolor: white">
+                    <div id="most_revenue_route_div">
+                      <p id="most_revenue_route_title"><U>Most Revenue Route</U><br><br>
+                        <span id="most_revenue_route" class="summary_metric">calculating...</span></p><br><br>
+                      <!-- <p id="most_busy_route">Most Busy Route</p> -->
+                    </div>
+                  </div>
+            </div>
+            <div class="charts-container">
+                  <div class="charts-card">
+                    <div id="pie_chart_div"></div>
+                  </div>
+                  <div class="charts-card">
+                    <div id="bar_chart_div"></div>
+                  </div>
+                  <div class="charts-card">
+                    <div id="line_chart_div"></div>
+                  </div>
+                  <div class="charts-card">
+                    <div id="column_chart_div"></div>
+                  </div>
+            </div>
+              <div class="tables-container">
+                  <div class="table-card">
+                    <div id="table_div" ></div>
+                  </div>
+              </div>
+        </div>
+      
+            <div class="filters-container">
+              <p id="Filter_Title">Select Filters Below:</p>
+                  <button class="accordion">Date Range</button>
+                  <div class="panel">
+                      <div class="btn-group">
+                          <button id="date_today" class="date-button" onclick="setDashboardDate('dttoday','date_today')" href="javascript:void(0);"><span>Today</span></button>
+                          <button id="date_thisweek" class="date-button" onclick="setDashboardDate('dtthisweek','date_thisweek')" href="javascript:void(0);"><span>Past 7 Days</span></button>
+                          <button id="date_thismonth" class="date-button" onclick="setDashboardDate('dtthismonth','date_thismonth')" href="javascript:void(0);"><span>Past 30 days</span></button>
+                          <button id="date_custom" class="date-button" onclick="setDashboardDate('dtcustomdates','date_custom')" href="javascript:void(0);"><span>Custom Date Range</span></button>
+                      </div>
+                      <div id="custom-dates" class="custom-dates-container" style="display: none">
+                        <div class="date-labels"><Span>Start Date: </Span>
+                          <Span>End Date: </Span>
+                        </div>
+                        <div class="start-end-dates">
+                          <input id="filter_start_date" type="date">
+                          <input id="filter_end_date" type="date">
+                          <input id="custom_date_button" type="submit" onclick="customDateSubmitted()" >
+                        </div>
+                      </div>
+                      <span class="date_selection_message" id="message_for_custom_date"></span>
+                  </div>
+            </div>
+      </div>
+  
+  <div class="footer-container">
+      <p id="footer_tab">1</p>
+  </div>
+</div>
+<script>
+    var accord = document.getElementsByClassName('accordion');
+    //  console.log(accord[0]);
+     var k;
+
+     for (k = 0; k < accord.length; k++) {
+       accord[k].addEventListener("click", function() {
+         this.classList.toggle("active");
+         var panel = this.nextElementSibling;
+        //  console.log(panel);
+         if (panel.style.display === "block") {
+            panel.style.display = "none";
+        } else {
+            panel.style.display = "block";
+        }
+       });
+     }
+   </script>
+</body>
+</html>
