@@ -69,8 +69,8 @@
 }
 
 .accordion {
-  background-color: #eee;
-  color: #444;
+  background-image: linear-gradient(-90deg, rgb(27, 2, 31), rgb(54, 1, 34));
+  color: #FFFFFF;
   cursor: pointer;
   padding: 18px;
   width: 100%;
@@ -88,7 +88,7 @@
 .panel {
   padding: 0 18px;
   display: none;
-  background-color: white;
+  background-image: linear-gradient(180deg, rgb(50, 1, 56), rgb(253, 201, 233));
   overflow: hidden;
 }
 
@@ -116,17 +116,17 @@
 }
 
 .filters-container .date_selection_message {
-  color: #FF0000;
+  color: rgb(229, 255, 115);
   font-weight: bold;
   align-items: flex-end;
-  /* margin:0; */
-  background-color: #FFFFFF;
+  background-image: linear-gradient(180deg, rgb(203, 20, 228), rgb(231, 52, 162));
 }
 
 .custom-dates-container {
   display: flex;
   flex-flow: row;
   margin:0;
+  background-image: linear-gradient(180deg, rgb(50, 1, 56), rgb(253, 201, 233));
   /* background-color: rgb(55, 231, 158); */
   justify-content: space-evenly;
 }
@@ -149,6 +149,13 @@
   margin:0;
   /* background-color: rgb(55, 231, 158); */
   /* justify-content: space-around; */
+}
+
+#custom_date_button {
+  background-color: #2eacde;
+  color: white;
+  border-color : #2eacde;
+  font-size: 14;
 }
 
 .highlights-container {
