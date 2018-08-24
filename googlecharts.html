@@ -8,6 +8,14 @@
       var prevbutton = 'date_today';
       // alert (`select COUNT(A) where D = date '${dashboardDate}'`);
 
+      let initialRange = new Date();
+      let initialStartDateString = '';
+      let initialEndDateString = '';
+
+      initialRange.setDate(initialRange.getDate() - 1);
+      initialEndDateString = initialRange.toISOString().slice(0,10);
+      initialStartDateString = initialRange.toISOString().slice(0,10);
+
       function setDashboardDate(dateRange, div_id) {
         // alert(dateRange);
 
@@ -20,19 +28,26 @@
         document.getElementById(div_id).style.color = 'white';
 
         let selectedRange = new Date();
+        let startDateString = '';
+        let endDateString = '';
 
         switch(dateRange) {
           case 'dttoday':
-                selectedRange.setDate(selectedRange.getDate() - 1);
-                hideCustomDates()
+                startDateString = selectedRange.toISOString().slice(0,10);
+                endDateString = selectedRange.toISOString().slice(0,10);
+                hideCustomDates();
                 break;
           case 'dtthisweek':
+                endDateString = selectedRange.toISOString().slice(0,10);
                 selectedRange.setDate(selectedRange.getDate() - 7);
-                hideCustomDates()
+                startDateString = selectedRange.toISOString().slice(0,10);
+                hideCustomDates();
                 break;
           case 'dtthismonth':
+                endDateString = selectedRange.toISOString().slice(0,10);
                 selectedRange.setDate(selectedRange.getDate() - 30);
-                hideCustomDates()
+                startDateString = selectedRange.toISOString().slice(0,10);
+                hideCustomDates();
                 break;
           case 'dtcustomdates':
                 showCustomDates();
@@ -40,10 +55,10 @@
           default:
         }
         
-        let dateString = selectedRange.toISOString().slice(0,10);
+        // let dateString = selectedRange.toISOString().slice(0,10);
         // alert('values to be shown > ' + dateString);
-        document.getElementById('selected_date_range').innerHTML = 'Data since "' + dateString + '"';
-        google.charts.setOnLoadCallback(initialize(dateString));
+        document.getElementById('selected_date_range').innerHTML = 'Data since "' + startDateString + '" until "' + endDateString + '"';
+        google.charts.setOnLoadCallback(initialize(startDateString, endDateString));
       }
 
       function showCustomDates() {
@@ -103,28 +118,59 @@
       // document.getElementById("custom-dates").style.display = "none";
 
       // Set a callback to run when the Google Visualization API is loaded.
-      google.charts.setOnLoadCallback(initialize);
+      google.charts.setOnLoadCallback(initialLoad);
+
+      function initialLoad() {
+        document.getElementById('selected_date_range').innerHTML = 'Data since "' + initialStartDateString + '" until "' + initialEndDateString + '"';
+        initialize(initialStartDateString, initialEndDateString);
+      }
 
       function initialize(startDate, endDate) {
         var opts = {sendMethod: 'auto'};
         // Replace the data source URL on next line with your data source URL.
-        var query = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1hGAzIxgDo996ccpNUbZLdjStEbX5zQGl-9QrUQkIjew/edit?usp=sharing', opts);
+        var lowrevenuequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView&headers=1', opts);
 
-        // Optional request to return only column C and the sum of column B, grouped by C members.
-        // startDate ? query.setQuery(`select A, E where D = date '${startDate}'`) : query.setQuery('select A, E');
-        // startDate ? query.setQuery(`select A, B where D > date '${startDate}'`) : query.setQuery('select A, B');
-        startDate ? (endDate ? (query.setQuery(`select A, B where D > date '${startDate}' and D <= date '${endDate}' limit 10`))
-                             : query.setQuery(`select A, B where D > date '${startDate}' limit 10`))
-                  : query.setQuery('select A, B limit 10');
+        // startDate ? busyroutequery.setQuery(`select A, MAX(B) where D > date '${startDate}' group by A`) : busyroutequery.setQuery('select A, MAX(B) group by A');
+        startDate ? (endDate ? lowrevenuequery.setQuery(`select A, MIN(E) where B >= date '${startDate}' and B <= date '${endDate}' group by A order by MIN(E) limit 10`)
+                            : lowrevenuequery.setQuery(`select A, MIN(E) where B >= date '${startDate}' group by A order by MIN(E) limit 10`))
+                  : lowrevenuequery.setQuery('select A, MIN(E) group by A order by MIN(E) limit 10');
 
         // Send the query with a callback function.
-        query.send(handleQueryResponse);
+        lowrevenuequery.send(handleQueryResponse);
 
-        var tablequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1hGAzIxgDo996ccpNUbZLdjStEbX5zQGl-9QrUQkIjew/edit?usp=sharing', opts);
+        var toprevenuequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView&headers=1', opts);
+
+        // startDate ? busyroutequery.setQuery(`select A, MAX(B) where D > date '${startDate}' group by A`) : busyroutequery.setQuery('select A, MAX(B) group by A');
+        startDate ? (endDate ? toprevenuequery.setQuery(`select A, MAX(E) where B >= date '${startDate}' and B <= date '${endDate}' group by A order by MAX(E) desc limit 10`)
+                            : toprevenuequery.setQuery(`select A, MAX(E) where B >= date '${startDate}' group by A order by MAX(E) desc limit 10`))
+                  : toprevenuequery.setQuery('select A, MAX(E) group by A order by MAX(E) desc limit 10');
+
+        // Send the query with a callback function.
+        toprevenuequery.send(handleTopRevenueChart);
+
+        var lowutilizationquery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView', opts);
+
+        startDate ? (endDate ? (lowutilizationquery.setQuery(`select A, MIN(C) where B >= date '${startDate}' and B <= date '${endDate}' group by A order by MIN(C) asc limit 10`))
+                             : lowutilizationquery.setQuery(`select A, MIN(C) where B >= date '${startDate}' group by A order by MIN(C) asc limit 10`))
+                  : lowutilizationquery.setQuery('select A, MIN(C) group by A order by MIN(C) asc limit 10');
+
+        lowutilizationquery.send(handleLowtUtilizationChart);
+
+        var crowdedroutequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView&headers=1', opts);
+
+        // startDate ? busyroutequery.setQuery(`select A, MAX(B) where D > date '${startDate}' group by A`) : busyroutequery.setQuery('select A, MAX(B) group by A');
+        startDate ? (endDate ? crowdedroutequery.setQuery(`select A, MAX(C) where B >= date '${startDate}' and B <= date '${endDate}' group by A order by MAX(C) desc limit 10`)
+                            : crowdedroutequery.setQuery(`select A, MAX(C) where B >= date '${startDate}' group by A order by MAX(C) desc limit 10`))
+                  : crowdedroutequery.setQuery('select A, MAX(C) group by A order by MAX(C) desc limit 10');
+
+        // Send the query with a callback function.
+        crowdedroutequery.send(handleCrowdedRevenueChart);
+
+        var tablequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView', opts);
 
         // startDate ? tablequery.setQuery(`select A,B,C,D,E where D > date '${startDate}'`): tablequery.setQuery('select A,B,C,D,E');
-        startDate ? (endDate ? (tablequery.setQuery(`select A,B,C,D,E where D > date '${startDate}' and D <= date '${endDate}'`))
-                             : tablequery.setQuery(`select A,B,C,D,E where D > date '${startDate}'`))
+        startDate ? (endDate ? (tablequery.setQuery(`select A,B,C,D,E where B >= date '${startDate}' and B <= date '${endDate}'`))
+                             : tablequery.setQuery(`select A,B,C,D,E where B >= date '${startDate}'`))
                   : tablequery.setQuery('select A,B,C,D,E');
         //tablequery.setQuery('select A,B,C,D,E');
 
@@ -133,44 +179,54 @@
 
         // Replace the data source URL on next line with your data source URL.
         // var servicequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1hGAzIxgDo996ccpNUbZLdjStEbX5zQGl-9QrUQkIjew/edit?usp=sharing', opts);
-        var servicequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView-2018-08-21', opts);
+        var servicequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView', opts);
         
         // startDate ? servicequery.setQuery(`select COUNT(A) where D > date '${startDate}'`) : servicequery.setQuery('select COUNT(A)');
-        servicequery.setQuery('select COUNT(A)');
+        startDate ? (endDate ? servicequery.setQuery(`select COUNT(A) where B >= date '${startDate}' and B <= date '${endDate}'`)
+                             : servicequery.setQuery(`select COUNT(A) where B >= date '${startDate}'`))
+                  : servicequery.setQuery('select COUNT(A)');
 
         // Send the query with a callback function.
         servicequery.send(handleServiceQueryResponse);
 
         // Replace the data source URL on next line with your data source URL.
         // var passengerquery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1hGAzIxgDo996ccpNUbZLdjStEbX5zQGl-9QrUQkIjew/edit?usp=sharing', opts);
-        var passengerquery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView-2018-08-21', opts);
+        var passengerquery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView', opts);
 
         // startDate ? passengerquery.setQuery(`select SUM(B) where D > date '${startDate}'`) : passengerquery.setQuery('select SUM(B)');
-        passengerquery.setQuery('select SUM(C)');
+        startDate ? (endDate ? passengerquery.setQuery(`select SUM(C) where B >= date '${startDate}' and B <= date '${endDate}'`)
+                             : passengerquery.setQuery(`select SUM(C) where B >= date '${startDate}'`))
+                  : passengerquery.setQuery('select SUM(C)');
 
         // Send the query with a callback function.
         passengerquery.send(handlePassengerQueryResponse);
 
-        var busyroutequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView-2018-08-21', opts);
+        var busyroutequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView', opts);
 
         // startDate ? busyroutequery.setQuery(`select A, MAX(B) where D > date '${startDate}' group by A`) : busyroutequery.setQuery('select A, MAX(B) group by A');
-        busyroutequery.setQuery('select A, MAX(C) group by A order by MAX(C) desc');
+        startDate ? (endDate ? busyroutequery.setQuery(`select A, MAX(C)  where B >= date '${startDate}' and B <= date '${endDate}' group by A order by MAX(C) desc`)
+                             : busyroutequery.setQuery(`select A, MAX(C)  where B >= date '${startDate}' group by A order by MAX(C) desc`))
+                  : busyroutequery.setQuery('select A, MAX(C) group by A order by MAX(C) desc');
 
         // Send the query with a callback function.
         busyroutequery.send(handleBusyRouteQueryResponse);
 
-        var crowdedstopquery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=StopView-2018-08-21', opts);
+        var crowdedstopquery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=StopView', opts);
 
         // startDate ? busyroutequery.setQuery(`select A, MAX(B) where D > date '${startDate}' group by A`) : busyroutequery.setQuery('select A, MAX(B) group by A');
-        crowdedstopquery.setQuery('select A, MAX(E) group by A order by MAX(E) desc');
+        startDate ? (endDate ? crowdedstopquery.setQuery(`select A, MAX(E) where B >= date '${startDate}' and B <= date '${endDate}' group by A order by MAX(E) desc`)
+                             : crowdedstopquery.setQuery(`select A, MAX(E) where B >= date '${startDate}' group by A order by MAX(E) desc`))
+                  : crowdedstopquery.setQuery('select A, MAX(E) group by A order by MAX(E) desc');
 
         // Send the query with a callback function.
         crowdedstopquery.send(handleCrowdedStopQueryResponse);
 
-        var revenueroutequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView-2018-08-21&headers=1', opts);
+        var revenueroutequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView&headers=1', opts);
 
         // startDate ? busyroutequery.setQuery(`select A, MAX(B) where D > date '${startDate}' group by A`) : busyroutequery.setQuery('select A, MAX(B) group by A');
-        revenueroutequery.setQuery('select A, MAX(E) group by A order by MAX(E) desc');
+        startDate ? (endDate ? revenueroutequery.setQuery(`select A, MAX(E) where B >= date '${startDate}' and B <= date '${endDate}' group by A order by MAX(E) desc`)
+                             : revenueroutequery.setQuery(`select A, MAX(E) where B >= date '${startDate}' group by A order by MAX(E) desc`))
+                  : revenueroutequery.setQuery('select A, MAX(E) group by A order by MAX(E) desc');
 
         // Send the query with a callback function.
         revenueroutequery.send(handleRevenueRouteQueryResponse);
@@ -178,7 +234,15 @@
       }
 
       function numberWithCommas(x) {
-        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        x=x.toString();
+        var lastThree = x.substring(x.length-3);
+        var otherNumbers = x.substring(0,x.length-3);
+        if(otherNumbers != '')
+            lastThree = ',' + lastThree;
+        var res = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + lastThree;
+        // let modx = x.toString().replace(/\B(?=(\d{3})+(?!\d))/, ",");
+        // let modx = x.toString().replace(/(\d{3})$/, ",");
+        return res;
       }
 
       function handleQueryResponse(response) {
@@ -187,38 +251,98 @@
           alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
           return;
         }
-        var options = {'title':'Top 10 Bus Utilization',
+        var options = {'title':'Bottom 10 Route Revenue per day',
                        'width':300,
                        'height':250,
-                       'background-color': '#05f5fd'};
-
-        var pie_options = {'title':'Top 10 Bus Utilization',
-                       'width':300,
-                       'height':250,
-                       'legend': 'left',
-                       'pieHole': 0.9};
+                       'backgroundColor': '#f8f4df'};
 
         var data = response.getDataTable();
-        var pie_chart = new google.visualization.PieChart(document.getElementById('pie_chart_div'));
-        var bar_chart = new google.visualization.BarChart(document.getElementById('bar_chart_div'));
-        var line_chart = new google.visualization.LineChart(document.getElementById('line_chart_div'));
         var column_chart = new google.visualization.ColumnChart(document.getElementById('column_chart_div'));
 
-        pie_chart.draw(data, pie_options);
-        bar_chart.draw(data, options);
-        line_chart.draw(data, options);
         column_chart.draw(data, options);
 
        }
 
-      function handleTableQueryResponse(response) {
+function handleTopRevenueChart(response) {
+
+      if (response.isError()) {
+        alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
+        return;
+      }
+
+      var toprevenueoptions = {'title':'Top 10 Route Revenue per day',
+                    'width':300,
+                    'height':250,
+                    'legend': 'left',
+                    'backgroundColor': '#f8f4df',
+                    'pieHole': 0.9};
+
+      var toprevenuedata = response.getDataTable();
+      var toprevenuechart = new google.visualization.PieChart(document.getElementById('pie_chart_div'));
+
+      toprevenuechart.draw(toprevenuedata, toprevenueoptions);
+}
+
+function handleCrowdedRevenueChart(response) {
+
         if (response.isError()) {
           alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
           return;
         }
+        var revenuechartoptions = {'title':'Top 10 Crowded Routes per day',
+                      'width':300,
+                      'height':250,
+                      'backgroundColor': '#f8f4df'};
+
+        var revenuechartdata = response.getDataTable();
+        var line_chart = new google.visualization.LineChart(document.getElementById('line_chart_div'));
+
+        line_chart.draw(revenuechartdata, revenuechartoptions);
+
+}
+
+function handleLowtUtilizationChart(response) {
+
+        if (response.isError()) {
+          alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
+          return;
+        }
+        var lowutilizationoptions = {'title':'Bottom 10 Bus Utilization per day',
+                      'width':300,
+                      'height':250,
+                      'backgroundColor': '#f8f4df'};
+
+        var lowutilizationdata = response.getDataTable();
+        var bar_chart = new google.visualization.BarChart(document.getElementById('bar_chart_div'));
+
+        bar_chart.draw(lowutilizationdata, lowutilizationoptions);
+}
+
+
+function handleTableQueryResponse(response) {
+        if (response.isError()) {
+          alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
+          return;
+        }
+
+          var cssClassNames = {
+              'headerRow': 'italic-darkblue-font large-font bold-font',
+              'tableRow': '',
+              'oddTableRow': 'beige-background',
+              'selectedTableRow': 'orange-background large-font bold-font',
+              'hoverTableRow': '',
+              'headerCell': 'gold-border',
+              'tableCell': 'center-text',
+              'rowNumberCell': 'italic-purple-font',
+              'justify': 'center',
+          };
+
         var table_options = {'title':'Bus Utilization',
-                       'width':1200,
+                       'width':1240,
                        'height':220,
+                       'cssClassNames': cssClassNames,
+                       'showRowNumber': true,
+                       'allowHtml': true,
                        };
 
         var tabledata = response.getDataTable();
@@ -238,9 +362,21 @@
                       'width':250,
                       'height':200};
 
-        var servicedata = response.getDataTable();
+        var servicedata = null;
+        servicedata = response.getDataTable();
         
-        document.getElementById('buses_in_service').innerHTML = servicedata.getValue(0,0)
+        try {
+        document.getElementById('routes_in_service').innerHTML = numberWithCommas(servicedata.getValue(0,0));
+        }
+        catch(err) {
+          switch (err.message) {
+            case 'Table has no rows.' :
+                  document.getElementById('routes_in_service').innerHTML = 0  + '/-<br><span style="font-size:18"}>(No data for selected date)</span>';
+                  break;
+            default :
+                  document.getElementById('routes_in_service').innerHTML = 0;
+          }
+        }
       }
 
       function handlePassengerQueryResponse(response) {
@@ -255,8 +391,19 @@
 
         var passengerdata = response.getDataTable();
 
-        document.getElementById('total_passengers').innerHTML = numberWithCommas(passengerdata.getValue(0,0));
-      }
+        try {
+          document.getElementById('total_passengers').innerHTML = numberWithCommas(passengerdata.getValue(0,0));
+        }
+        catch(err) {
+          switch (err.message) {
+            case 'Table has no rows.' :
+                  document.getElementById('total_passengers').innerHTML = 0  + '/-<br><span style="font-size:18"}>(No data for selected date)</span>';
+                  break;
+            default :
+                  document.getElementById('total_passengers').innerHTML = 0;
+          }
+        }
+    }
 
       function handleCrowdedStopQueryResponse(response) {
 
@@ -270,8 +417,18 @@
 
         var crowdedstopdata = response.getDataTable();
 
-        // document.getElementById('most_busy_route').innerHTML = crowdedstopdata.getValue(0,0);
-        document.getElementById('most_crowded_stop').innerHTML = crowdedstopdata.getValue(0,0);
+        try {
+          document.getElementById('most_crowded_stop').innerHTML = crowdedstopdata.getValue(0,0);
+        }
+        catch(err) {
+          switch (err.message) {
+            case 'Table has no rows.' :
+                  document.getElementById('most_crowded_stop').innerHTML = 0  + '/-<br><span style="font-size:18"}>(No data for selected date)</span>';
+                  break;
+            default :
+                  document.getElementById('most_crowded_stop').innerHTML = 0;
+          }
+        }
         
       }
 
@@ -287,8 +444,18 @@
 
           var busyroutedata = response.getDataTable();
 
+        try {
           document.getElementById('most_busy_route').innerHTML = busyroutedata.getValue(0,0);
-          // document.getElementById('most_crowded_stop').innerHTML = 'Ameerpet';
+        }
+        catch(err) {
+          switch (err.message) {
+            case 'Table has no rows.' :
+                  document.getElementById('most_busy_route').innerHTML = 0  + '/-<br><span style="font-size:18"}>(No data for selected date)</span>';
+                  break;
+            default :
+                  document.getElementById('most_busy_route').innerHTML = 0;
+          }
+        }
 
       }
 
@@ -304,9 +471,19 @@
 
           var revenueroutedata = response.getDataTable();
 
+        try {
           document.getElementById('most_revenue_route').innerHTML = '&#8377;' + numberWithCommas(revenueroutedata.getValue(0,1))
            + '/-<br><span style="font-size:24"}>(Route #: ' + revenueroutedata.getValue(0,0) + ')</span>';
-          // document.getElementById('most_crowded_stop').innerHTML = 'Ameerpet';
+        }
+        catch(err) {
+          switch (err.message) {
+            case 'Table has no rows.' :
+                  document.getElementById('most_revenue_route').innerHTML = 0  + '/-<br><span style="font-size:18"}>(No data for selected date)</span>';
+                  break;
+            default :
+                  document.getElementById('most_revenue_route').innerHTML = 0;
+          }
+        }
 
       }
 
@@ -326,11 +503,11 @@
           <div class="highlights-container">
                   <div class="summary-card">
                     <div id="total_in_service_div">
-                      <p id="buses_in_service_title"><U>Total Buses In Service</U><br><br><span id="buses_in_service" class="summary_metric">calculating...</span></p>
-                      <!-- <p id="buses_in_service">buses in service</p> -->
+                      <p id="routes_in_service_title"><U>Total Routes In Service</U><br><br><span id="routes_in_service" class="summary_metric">calculating...</span></p>
+                      <!-- <p id="routes_in_service">buses in service</p> -->
                     </div>
                   </div>
-                  <div class="summary-card" style="--summarybgcolor: greenyellow; --summarytextcolor: black">
+                  <div class="summary-card" style="--summarybgcolor: rgb(3, 88, 109); --summarytextcolor: white">
                     <div id="total_passengers_div">
                       <p id="total_passengers_title"><U>Total Passengers</U><br><br><span id="total_passengers" class="summary_metric">calculating...</span></p>
                       <!-- <p id="total_passengers">Total Passengers</p> -->
@@ -348,7 +525,7 @@
                         <!-- <p id="most_busy_route">Most Busy Route</p> -->
                       </div>
                   </div>
-                  <div class="summary-card" style="--summarybgcolor: rgb(3, 88, 109); --summarytextcolor: white">
+                  <div class="summary-card" style="--summarybgcolor: greenyellow; --summarytextcolor: black">
                     <div id="most_revenue_route_div">
                       <p id="most_revenue_route_title"><U>Most Revenue Route</U><br><br>
                         <span id="most_revenue_route" class="summary_metric">calculating...</span></p><br><br>
