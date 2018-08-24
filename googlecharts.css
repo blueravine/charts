@@ -239,7 +239,7 @@
 
 .summary_metric {
   font-weight: bold;
-  font-size: 2vw;
+  font-size: 1.5vw;
   /* font-size: 40; */
   text-align: center;
 }
@@ -249,7 +249,7 @@
 }
 
   .charts-card {
-      background-color: #f8f4df
+      background-color: #fafafa
       box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
       transition: 0.3s;
       width: 300;

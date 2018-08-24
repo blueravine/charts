@@ -254,7 +254,7 @@
         var options = {'title':'Bottom 10 Route Revenue per day',
                        'width':300,
                        'height':250,
-                       'backgroundColor': '#f8f4df'};
+                       'backgroundColor': '#fafafa'};
 
         var data = response.getDataTable();
         var column_chart = new google.visualization.ColumnChart(document.getElementById('column_chart_div'));
@@ -274,7 +274,7 @@ function handleTopRevenueChart(response) {
                     'width':300,
                     'height':250,
                     'legend': 'left',
-                    'backgroundColor': '#f8f4df',
+                    'backgroundColor': '#fafafa',
                     'pieHole': 0.9};
 
       var toprevenuedata = response.getDataTable();
@@ -292,10 +292,10 @@ function handleCrowdedRevenueChart(response) {
         var revenuechartoptions = {'title':'Top 10 Crowded Routes per day',
                       'width':300,
                       'height':250,
-                      'backgroundColor': '#f8f4df'};
+                      'backgroundColor': '#fafafa'};
 
         var revenuechartdata = response.getDataTable();
-        var line_chart = new google.visualization.LineChart(document.getElementById('line_chart_div'));
+        var line_chart = new google.visualization.ScatterChart(document.getElementById('scatter_chart_div'));
 
         line_chart.draw(revenuechartdata, revenuechartoptions);
 
@@ -310,7 +310,7 @@ function handleLowtUtilizationChart(response) {
         var lowutilizationoptions = {'title':'Bottom 10 Bus Utilization per day',
                       'width':300,
                       'height':250,
-                      'backgroundColor': '#f8f4df'};
+                      'backgroundColor': '#fafafa'};
 
         var lowutilizationdata = response.getDataTable();
         var bar_chart = new google.visualization.BarChart(document.getElementById('bar_chart_div'));
@@ -418,7 +418,8 @@ function handleTableQueryResponse(response) {
         var crowdedstopdata = response.getDataTable();
 
         try {
-          document.getElementById('most_crowded_stop').innerHTML = crowdedstopdata.getValue(0,0);
+          document.getElementById('most_crowded_stop').innerHTML = crowdedstopdata.getValue(0,0)
+           + '<br><span style="font-size:1vw"}>(# passengers: ' + numberWithCommas(crowdedstopdata.getValue(0,1)) + ')</span>';
         }
         catch(err) {
           switch (err.message) {
@@ -473,7 +474,7 @@ function handleTableQueryResponse(response) {
 
         try {
           document.getElementById('most_revenue_route').innerHTML = '&#8377;' + numberWithCommas(revenueroutedata.getValue(0,1))
-           + '/-<br><span style="font-size:24"}>(Route #: ' + revenueroutedata.getValue(0,0) + ')</span>';
+           + '/-<br><span style="font-size:1vw"}>(Route #: ' + revenueroutedata.getValue(0,0) + ')</span>';
         }
         catch(err) {
           switch (err.message) {
@@ -513,10 +514,11 @@ function handleTableQueryResponse(response) {
                       <!-- <p id="total_passengers">Total Passengers</p> -->
                     </div>
                   </div>
-                  <div class="summary-card" style="--summarybgcolor: blue; --summarytextcolor: white">
-                    <div id="most_crowded_stop_div">
-                      <p id="most_crowded_stop_title"><U>Most Crowded Stop</U><br><br><span id="most_crowded_stop" class="summary_metric">calculating...</span></p>
-                      <!-- <p id="most_crowded_stop">Most Crowded Stop</p> -->
+                  <div class="summary-card" style="--summarybgcolor: greenyellow; --summarytextcolor: black">
+                    <div id="most_revenue_route_div">
+                      <p id="most_revenue_route_title"><U>Most Revenue Route</U><br><br>
+                        <span id="most_revenue_route" class="summary_metric">calculating...</span></p><br><br>
+                      <!-- <p id="most_busy_route">Most Busy Route</p> -->
                     </div>
                   </div>
                   <div class="summary-card" style="--summarybgcolor: rgb(124, 30, 93); --summarytextcolor: white">
@@ -525,23 +527,22 @@ function handleTableQueryResponse(response) {
                         <!-- <p id="most_busy_route">Most Busy Route</p> -->
                       </div>
                   </div>
-                  <div class="summary-card" style="--summarybgcolor: greenyellow; --summarytextcolor: black">
-                    <div id="most_revenue_route_div">
-                      <p id="most_revenue_route_title"><U>Most Revenue Route</U><br><br>
-                        <span id="most_revenue_route" class="summary_metric">calculating...</span></p><br><br>
-                      <!-- <p id="most_busy_route">Most Busy Route</p> -->
+                  <div class="summary-card" style="--summarybgcolor: rgb(185, 44, 86); --summarytextcolor: white">
+                    <div id="most_crowded_stop_div">
+                      <p id="most_crowded_stop_title"><U>Most Crowded Stop</U><br><br><span id="most_crowded_stop" class="summary_metric">calculating...</span></p>
+                      <!-- <p id="most_crowded_stop">Most Crowded Stop</p> -->
                     </div>
                   </div>
             </div>
             <div class="charts-container">
                   <div class="charts-card">
-                    <div id="pie_chart_div"></div>
+                    <div id="scatter_chart_div"></div>
                   </div>
                   <div class="charts-card">
                     <div id="bar_chart_div"></div>
                   </div>
                   <div class="charts-card">
-                    <div id="line_chart_div"></div>
+                    <div id="pie_chart_div"></div>
                   </div>
                   <div class="charts-card">
                     <div id="column_chart_div"></div>
@@ -554,15 +555,15 @@ function handleTableQueryResponse(response) {
               </div>
         </div>
       
-            <div class="filters-container">
+            <div class="filters-container" id="filterscontainer">
               <p id="Filter_Title">Select Filters Below:</p>
                   <button class="accordion">Date Range</button>
                   <div class="panel">
                       <div class="btn-group">
-                          <button id="date_today" class="date-button" onclick="setDashboardDate('dttoday','date_today')" href="javascript:void(0);"><span>Today</span></button>
-                          <button id="date_thisweek" class="date-button" onclick="setDashboardDate('dtthisweek','date_thisweek')" href="javascript:void(0);"><span>Past 7 Days</span></button>
-                          <button id="date_thismonth" class="date-button" onclick="setDashboardDate('dtthismonth','date_thismonth')" href="javascript:void(0);"><span>Past 30 days</span></button>
-                          <button id="date_custom" class="date-button" onclick="setDashboardDate('dtcustomdates','date_custom')" href="javascript:void(0);"><span>Custom Date Range</span></button>
+                          <button id="date_today" class="date-button" onclick="setDashboardDate('dttoday','date_today')"><span>Today</span></button>
+                          <button id="date_thisweek" class="date-button" onclick="setDashboardDate('dtthisweek','date_thisweek')"><span>Past 7 Days</span></button>
+                          <button id="date_thismonth" class="date-button" onclick="setDashboardDate('dtthismonth','date_thismonth')"><span>Past 30 days</span></button>
+                          <button id="date_custom" class="date-button" onclick="setDashboardDate('dtcustomdates','date_custom')"><span>Custom Date Range</span></button>
                       </div>
                       <div id="custom-dates" class="custom-dates-container" style="display: none">
                         <div class="date-labels"><Span>Start Date: </Span>
@@ -600,6 +601,16 @@ function handleTableQueryResponse(response) {
         }
        });
      }
+
+  function toggle_visibility(id) {
+      var e = document.getElementById(id);
+      if(e.style.display == 'flex') {
+         e.style.display = 'none';
+      } else {
+         e.style.display = 'flex';
+      }
+  }
+
    </script>
 </body>
 </html>
