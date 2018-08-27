@@ -71,7 +71,7 @@
         var x = document.getElementById("custom-dates");
         x.style.display = "none";
 
-        document.getElementById('message_for_custom_date').innerHTML = null;
+        document.getElementById('message_for_custom_date').innerHTML = '.';
 
         stopWatchingDateChange();
       }
@@ -89,7 +89,7 @@
             // alert(dateEntered); //e.g. Fri Nov 13 2015 00:00:00 GMT+0000 (GMT Standard Time)
 
             if(input){
-              document.getElementById('message_for_custom_date').innerHTML = null;
+              document.getElementById('message_for_custom_date').innerHTML = '.';
             }
       }     
 
@@ -182,9 +182,9 @@
         var servicequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView', opts);
         
         // startDate ? servicequery.setQuery(`select COUNT(A) where D > date '${startDate}'`) : servicequery.setQuery('select COUNT(A)');
-        startDate ? (endDate ? servicequery.setQuery(`select COUNT(A) where B >= date '${startDate}' and B <= date '${endDate}'`)
-                             : servicequery.setQuery(`select COUNT(A) where B >= date '${startDate}'`))
-                  : servicequery.setQuery('select COUNT(A)');
+        startDate ? (endDate ? servicequery.setQuery(`select A where B >= date '${startDate}' and B <= date '${endDate}'`)
+                             : servicequery.setQuery(`select A where B >= date '${startDate}'`))
+                  : servicequery.setQuery('select A');
 
         // Send the query with a callback function.
         servicequery.send(handleServiceQueryResponse);
@@ -252,8 +252,8 @@
           return;
         }
         var options = {'title':'Bottom 10 Route Revenue per day',
-                       'width':300,
-                       'height':250,
+                      //  'width':300,
+                      //  'height':250,
                        'backgroundColor': '#fafafa'};
 
         var data = response.getDataTable();
@@ -271,8 +271,8 @@ function handleTopRevenueChart(response) {
       }
 
       var toprevenueoptions = {'title':'Top 10 Route Revenue per day',
-                    'width':300,
-                    'height':250,
+                    // 'width':300,
+                    // 'height':250,
                     'legend': 'left',
                     'backgroundColor': '#fafafa',
                     'pieHole': 0.9};
@@ -290,8 +290,8 @@ function handleCrowdedRevenueChart(response) {
           return;
         }
         var revenuechartoptions = {'title':'Top 10 Crowded Routes per day',
-                      'width':300,
-                      'height':250,
+                      // 'width':300,
+                      // 'height':250,
                       'backgroundColor': '#fafafa'};
 
         var revenuechartdata = response.getDataTable();
@@ -308,8 +308,8 @@ function handleLowtUtilizationChart(response) {
           return;
         }
         var lowutilizationoptions = {'title':'Bottom 10 Bus Utilization per day',
-                      'width':300,
-                      'height':250,
+                      // 'width':300,
+                      // 'height':250,
                       'backgroundColor': '#fafafa'};
 
         var lowutilizationdata = response.getDataTable();
@@ -337,19 +337,19 @@ function handleTableQueryResponse(response) {
               'justify': 'center',
           };
 
-        var table_options = {'title':'Bus Utilization',
-                       'width':1240,
-                       'height':220,
-                       'cssClassNames': cssClassNames,
-                       'showRowNumber': true,
-                       'allowHtml': true,
-                       };
+        // var table_options = {'title':'Bus Utilization',
+        //               //  'width':1240,
+        //               //  'height':220,
+        //                'cssClassNames': cssClassNames,
+        //                'showRowNumber': true,
+        //                'allowHtml': true,
+        //                };
 
-        var tabledata = response.getDataTable();
+        // var tabledata = response.getDataTable();
 
-        var table = new google.visualization.Table(document.getElementById('table_div'));
+        // var table = new google.visualization.Table(document.getElementById('table_div'));
 
-        table.draw(tabledata, table_options);
+        // table.draw(tabledata, table_options);
       }
 
       function handleServiceQueryResponse(response) {
@@ -366,7 +366,8 @@ function handleTableQueryResponse(response) {
         servicedata = response.getDataTable();
         
         try {
-        document.getElementById('routes_in_service').innerHTML = numberWithCommas(servicedata.getValue(0,0));
+        // document.getElementById('routes_in_service').innerHTML = numberWithCommas(servicedata.getValue(0,0));
+        document.getElementById('routes_in_service').innerHTML = numberWithCommas(servicedata.getDistinctValues(0).length);
         }
         catch(err) {
           switch (err.message) {
@@ -495,87 +496,120 @@ function handleTableQueryResponse(response) {
   <body>
     <!--Div that will hold the pie chart-->
   <div class="main-container">
+      <div class="navbar">
+          <a href="#">HOME</a>
+          <a href="#">STOP</a>
+          <a href="#">ROUTE</a>
+          <a href="rawdata.html">RAWDATA</a>
+        </div>
       <div class="header-container">
             <p id="selected_date_range">Showing All Data</p>
+            <div class="btn-group">
+                <button id="date_today" class="date-button" onclick="setDashboardDate('dttoday','date_today')"><span>Today</span></button>
+                <button id="date_thisweek" class="date-button" onclick="setDashboardDate('dtthisweek','date_thisweek')"><span>Past 7 Days</span></button>
+                <button id="date_thismonth" class="date-button" onclick="setDashboardDate('dtthismonth','date_thismonth')"><span>Past 30 days</span></button>
+                <button id="date_custom" class="date-button" onclick="setDashboardDate('dtcustomdates','date_custom')"><span>Custom Date Range</span></button>
+                <div id="custom-dates" class="custom-dates-container" style="display: none">
+                    <div class="date-labels"><Span>Start Date: </Span>
+                      <Span>End Date: </Span>
+                    </div>
+                    <div class="start-end-dates">
+                      <input id="filter_start_date" type="date">
+                      <input id="filter_end_date" type="date">
+                    </div>
+                    <div class="submit-date">
+                      <span class="date_selection_message" id="message_for_custom_date">.</span>
+                      <input id="custom_date_button" type="submit" onclick="customDateSubmitted()" >
+                    </div>
+                </div>
+            </div>
+
       </div>
-      <div class="dashboard-container">
+      <!-- <div class="filters-container" id="filterscontainer">
+          <p id="Filter_Title">Select Filters Below:</p>
+              <button class="accordion">Date Range</button>
+              <div class="panel">
+                   <div class="btn-group">
+                      <button id="date_today" class="date-button" onclick="setDashboardDate('dttoday','date_today')"><span>Today</span></button>
+                      <button id="date_thisweek" class="date-button" onclick="setDashboardDate('dtthisweek','date_thisweek')"><span>Past 7 Days</span></button>
+                      <button id="date_thismonth" class="date-button" onclick="setDashboardDate('dtthismonth','date_thismonth')"><span>Past 30 days</span></button>
+                      <button id="date_custom" class="date-button" onclick="setDashboardDate('dtcustomdates','date_custom')"><span>Custom Date Range</span></button>
+                  </div> 
+                   <div id="custom-dates" class="custom-dates-container" style="display: none">
+                    <div class="date-labels"><Span>Start Date: </Span>
+                      <Span>End Date: </Span>
+                      <span>.</span>
+                    </div>
+                    <div class="start-end-dates">
+                      <input id="filter_start_date" type="date">
+                      <input id="filter_end_date" type="date">
+                      <input id="custom_date_button" type="submit" onclick="customDateSubmitted()" >
+                    </div>
+                  </div>
+                  <span class="date_selection_message" id="message_for_custom_date"></span> 
+              </div>
+        </div>   -->
+        <div class="dashboard-container">
+            <div class="data-side-bar"></div>
+            
         <div class = "data-container">
-          <div class="highlights-container">
+        <div class="highlights-container">
                   <div class="summary-card">
                     <div id="total_in_service_div">
-                      <p id="routes_in_service_title"><U>Total Routes In Service</U><br><br><span id="routes_in_service" class="summary_metric">calculating...</span></p>
+                      <p id="routes_in_service_title">ROUTES IN SERVICE<br><br>
+                        <span id="routes_in_service" class="summary_metric">calculating...</span></p>
                       <!-- <p id="routes_in_service">buses in service</p> -->
                     </div>
                   </div>
                   <div class="summary-card" style="--summarybgcolor: rgb(3, 88, 109); --summarytextcolor: white">
                     <div id="total_passengers_div">
-                      <p id="total_passengers_title"><U>Total Passengers</U><br><br><span id="total_passengers" class="summary_metric">calculating...</span></p>
+                      <p id="total_passengers_title">TOTAL PASSENGERS<br><br>
+                        <span id="total_passengers" class="summary_metric">calculating...</span></p>
                       <!-- <p id="total_passengers">Total Passengers</p> -->
                     </div>
                   </div>
                   <div class="summary-card" style="--summarybgcolor: greenyellow; --summarytextcolor: black">
                     <div id="most_revenue_route_div">
-                      <p id="most_revenue_route_title"><U>Most Revenue Route</U><br><br>
+                      <p id="most_revenue_route_title">MOST REVENUE ROUTE<br><br>
                         <span id="most_revenue_route" class="summary_metric">calculating...</span></p><br><br>
                       <!-- <p id="most_busy_route">Most Busy Route</p> -->
                     </div>
                   </div>
                   <div class="summary-card" style="--summarybgcolor: rgb(124, 30, 93); --summarytextcolor: white">
                       <div id="most_busy_route_div">
-                        <p id="most_busy_route_title"><U>Most Busy Route</U><br><br><span id="most_busy_route" class="summary_metric">calculating...</span></p><br><br>
+                        <p id="most_busy_route_title">MOST BUSY ROUTE<br><br>
+                          <span id="most_busy_route" class="summary_metric">calculating...</span></p><br><br>
                         <!-- <p id="most_busy_route">Most Busy Route</p> -->
                       </div>
                   </div>
                   <div class="summary-card" style="--summarybgcolor: rgb(185, 44, 86); --summarytextcolor: white">
                     <div id="most_crowded_stop_div">
-                      <p id="most_crowded_stop_title"><U>Most Crowded Stop</U><br><br><span id="most_crowded_stop" class="summary_metric">calculating...</span></p>
+                      <p id="most_crowded_stop_title">MOST CROWDED STOP<br><br>
+                        <span id="most_crowded_stop" class="summary_metric">calculating...</span></p>
                       <!-- <p id="most_crowded_stop">Most Crowded Stop</p> -->
                     </div>
                   </div>
             </div>
             <div class="charts-container">
-                  <div class="charts-card">
-                    <div id="scatter_chart_div"></div>
-                  </div>
-                  <div class="charts-card">
-                    <div id="bar_chart_div"></div>
-                  </div>
-                  <div class="charts-card">
-                    <div id="pie_chart_div"></div>
-                  </div>
-                  <div class="charts-card">
-                    <div id="column_chart_div"></div>
-                  </div>
-            </div>
-              <div class="tables-container">
-                  <div class="table-card">
-                    <div id="table_div" ></div>
-                  </div>
-              </div>
+                <div class="charts-row">
+                  <div id="scatter_chart_div" class="charts-card"></div>
+                  <div id="bar_chart_div" class="charts-card"></div>
+                </div>
+                <!-- <div class="charts-card">
+                  <div id="bar_chart_div"></div>
+                </div> -->
+                <div class="charts-row">
+                  <div id="pie_chart_div" class="charts-card"></div>
+                  <div id="column_chart_div" class="charts-card"></div>
+                </div>
+                <!-- <div class="charts-card">
+                  <div id="column_chart_div"></div>
+                </div> -->
+          </div>
+              
         </div>      
-            <div class="filters-container" id="filterscontainer">
-              <p id="Filter_Title">Select Filters Below:</p>
-                  <button class="accordion">Date Range</button>
-                  <div class="panel">
-                      <div class="btn-group">
-                          <button id="date_today" class="date-button" onclick="setDashboardDate('dttoday','date_today')"><span>Today</span></button>
-                          <button id="date_thisweek" class="date-button" onclick="setDashboardDate('dtthisweek','date_thisweek')"><span>Past 7 Days</span></button>
-                          <button id="date_thismonth" class="date-button" onclick="setDashboardDate('dtthismonth','date_thismonth')"><span>Past 30 days</span></button>
-                          <button id="date_custom" class="date-button" onclick="setDashboardDate('dtcustomdates','date_custom')"><span>Custom Date Range</span></button>
-                      </div>
-                      <div id="custom-dates" class="custom-dates-container" style="display: none">
-                        <div class="date-labels"><Span>Start Date: </Span>
-                          <Span>End Date: </Span>
-                        </div>
-                        <div class="start-end-dates">
-                          <input id="filter_start_date" type="date">
-                          <input id="filter_end_date" type="date">
-                          <input id="custom_date_button" type="submit" onclick="customDateSubmitted()" >
-                        </div>
-                      </div>
-                      <span class="date_selection_message" id="message_for_custom_date"></span>
-                  </div>
-            </div>
+
+        <div class="data-side-bar"></div>
       </div>
   
   <div class="footer-container">
