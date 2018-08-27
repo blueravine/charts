@@ -1,40 +1,66 @@
+* {
+  box-sizing: border-box;
+}
+
 .main-container {
   display: flex;
-  flex-direction: column;
-  background-color: #ebff79;
-  width:100%;
-  height: 100%;
+  flex-flow: column;
+  background-image: linear-gradient(-90deg,#f0f0f0, #ffffff);
+  /* width:100%;
+  height: 100%; */
   /* flex: 1; */
   margin: 0;
   /* justify-content: space-between; */
 }
 
+.navbar {
+  display: flex;
+  background-color: rgb(139, 139, 139);
+  flex: 5%;
+  justify-content: space-evenly;
+}
+
+/* Style the navigation bar links */
+.navbar a {
+  color: white;
+  padding: 10px 5px;
+  text-decoration: none;
+  text-align: center;
+  flex: 25%;
+}
+
+/* Change color on hover */
+.navbar a:hover {
+  background-color: #ddd;
+  color: black;
+}
+
 .header-container {
   display: flex;
   flex-flow: row;
-  width:100%;
-  height: 100%;
-  flex: 5%;
+  /* width:100%;
+  height: 100%; */
+  flex: 8%;
   justify-content: center;
   background-color: #d7fc0565;
-  background-image: linear-gradient(-90deg, rgb(50, 1, 56), rgb(253, 201, 233));
+  background-image: linear-gradient(-90deg,#f0f0f0, #ffffff);
 }
 
 .header-container p {
-  color:#FFFFFF;
+  color:rgb(16, 17, 59);
   text-align:center;
 }
 
 .footer-container {
   display: flex;
   flex-flow: row;
-  width:100%;
-  height: 100%;
+  /* width:100%;
+  height: 100%; */
   flex: 5%;
   justify-content: center;
   background-color: #05f5fd;
   /* background-color: red; */
-  background-image: linear-gradient(90deg, rgb(50, 1, 56), rgb(253, 201, 233)); /* Standard syntax (must be last) */
+  background-image: linear-gradient(-90deg,#f0f0f0, #ffffff); /* Standard syntax (must be last) */
   
 }
 
@@ -46,19 +72,19 @@
 .dashboard-container {
   display: flex;
   flex-direction: row;
-  background-color: #ebff79;
-  width:100%;
-  height: 100%;
-  flex: 90%;
+  /* background-image: linear-gradient(-90deg,#f0f0f0, #ffffff); */
+  /* width:100%;
+  height: 100%; */
+  flex: 82%;
   margin: 0;
   /* justify-content: space-between; */
 }
 
 .filters-container {
   display: flex;
-  flex-flow: column;
+  flex-flow: row;
   background-color: #7c0208;
-  background-image: linear-gradient(180deg, rgb(50, 1, 56), rgb(253, 201, 233));
+  background-image: linear-gradient(-90deg,#f0f0f0, #ffffff);
   flex: 20%;
   justify-content: flex-start;
 }
@@ -72,8 +98,8 @@
   background-image: linear-gradient(-90deg, rgb(27, 2, 31), rgb(54, 1, 34));
   color: #FFFFFF;
   cursor: pointer;
-  padding: 18px;
-  width: 100%;
+  padding: 8px;
+  /* width: 100%; */
   border: none;
   text-align: left;
   outline: none;
@@ -88,13 +114,13 @@
 .panel {
   padding: 0 18px;
   display: none;
-  background-image: linear-gradient(180deg, rgb(50, 1, 56), rgb(253, 201, 233));
+  background-image: linear-gradient(-90deg,#f0f0f0, #ffffff);
   overflow: hidden;
 }
 
 .btn-group {
   display: flex;
-  flex-flow: column;
+  flex-flow: row;
   /* background-color: rgb(55, 231, 158); */
   /* justify-content: space-around; */
 }
@@ -104,10 +130,10 @@
   flex-flow: column;
   /* background-color: #ffa602; */
   background-color: red; /*For browsers that do not support gradients*/
-  background-image: linear-gradient(-90deg, rgb(50, 1, 56), rgb(253, 201, 233)); /* Standard syntax (must be last) */
-  width:100%;
-  height: 100%;
-  flex: 80%;
+  background-image: linear-gradient(-90deg,#f0f0f0, #ffffff); /* Standard syntax (must be last) */
+  /* width:100%;
+  height: 100%; */
+  flex: 82%;
 }
 
 .data-container p {
@@ -119,14 +145,14 @@
   color: rgb(229, 255, 115);
   font-weight: bold;
   align-items: flex-end;
-  background-image: linear-gradient(180deg, rgb(203, 20, 228), rgb(231, 52, 162));
+  background-image: linear-gradient(-90deg, rgb(203, 20, 228), rgb(231, 52, 162));
 }
 
 .custom-dates-container {
   display: flex;
   flex-flow: row;
   margin:0;
-  background-image: linear-gradient(180deg, rgb(50, 1, 56), rgb(253, 201, 233));
+  background-image: linear-gradient(-90deg,#f0f0f0, #ffffff);
   /* background-color: rgb(55, 231, 158); */
   justify-content: space-evenly;
 }
@@ -134,7 +160,9 @@
 .custom-dates-container .date-labels {
   display: flex;
   flex-flow: column;
-  color: #FFFFFF;
+  color: rgb(16, 17, 59);
+  font-weight: bold;
+  font-style: italic;
   align-items: flex-start;
   margin:0;
   justify-content: space-evenly;
@@ -145,9 +173,19 @@
   flex-flow: column;
   color: #FFFFFF;
   align-items: flex-end;
+  justify-content: space-evenly;
   margin:0;
   /* background-color: rgb(55, 231, 158); */
   /* justify-content: space-around; */
+}
+
+.custom-dates-container .submit-date {
+  display: flex;
+  flex-flow: column;
+  color: #FFFFFF;
+  align-items: flex-start;
+  margin:0;
+  justify-content: space-evenly;
 }
 
 #custom_date_button {
@@ -157,28 +195,32 @@
   font-size: 14;
 }
 
+.data-side-bar{
+  flex:20%;
+}
+
 .highlights-container {
   display: flex;
   flex-flow: row;
-  width:100%;
-  height: 100%;
-  flex: 25%;
+  /* width:100%;
+  height: 100%; */
+  flex: 20%;
 }
 
 .charts-container {
   display: flex;
   flex-flow: row;
-  width:100%;
-  height: 100%;
-  flex: 40%;
+  /* width:100%;
+  height: 100%; */
+  flex: 80%;
 }
 
 .tables-container {
   display: flex;
-  flex-flow: row;
-  width:100%;
-  height: 100%;
-  flex: 35%;
+  flex-flow: column;
+  /* width:100%;
+  height: 100%; */
+  /* flex: 100%; */
 }
 
 .date-button {
@@ -187,7 +229,7 @@
   background-color: var(--button-bg-color, white);
   border: none;
   color: black;
-  padding: 15px 32px;
+  padding: 2px 32px;
   text-align: center;
   text-decoration: none;
   display: inline-block;
@@ -229,13 +271,13 @@
 .summary-card {
     box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
     transition: 0.3s;
-    width: 220;
-    height:140;
+    width: 200;
+    height:100;
     position: relative;
     /* border: 3px solid white; */
     background: var(--summarybgcolor, green);
     color: var(--summarytextcolor, white);
-    margin: 12px;
+    margin: 4px;
     text-align: center;
 }
 
@@ -245,7 +287,7 @@
 
 .summary_metric {
   font-weight: bold;
-  font-size: 1.5vw;
+  font-size: 1.4vw;
   /* font-size: 40; */
   text-align: center;
 }
@@ -258,8 +300,8 @@
       background-color: #fafafa;
       box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
       transition: 0.3s;
-      width: 300;
-      height: 250;
+      /* width: 300; */
+      /* height: 250; */
       margin: 5px;
   }
   
@@ -268,23 +310,26 @@
   }
   
   .tables-card {
+    display: flex;
     box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
     transition: 0.3s;
-    width: 100%;
-    height: 50%;
+    width: 2200;
+    height: 600; 
     margin: 10px;
-    object-fit: fill;
+    /* flex: 100%; */
+    /* object-fit: fill; */
 }
 
 .table-card:hover {
   box-shadow: 0 8px 16px 0 rgba(0,0,0,0.26);
 }
 
-.table-div {
-  width: 100%;
-  height: 50%;
-  display:table;
-}
+/* #table-div {
+  /* width: 100%;
+  height: 50%; */
+  /* display:table; */
+  /* flex: 100%; */
+} */
 
 .bold-green-font {
   font-weight: bold;

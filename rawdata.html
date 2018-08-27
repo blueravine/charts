@@ -1,0 +1,264 @@
+
+
+    <html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!--Load the AJAX API-->
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+            <script>
+        var dashboardDate;
+        var prevbutton = 'date_today';
+        // alert (`select COUNT(A) where D = date '${dashboardDate}'`);
+
+        let initialRange = new Date();
+        let initialStartDateString = '';
+        let initialEndDateString = '';
+
+        initialRange.setDate(initialRange.getDate() - 1);
+        initialEndDateString = initialRange.toISOString().slice(0,10);
+        initialStartDateString = initialRange.toISOString().slice(0,10);
+
+        function setDashboardDate(dateRange, div_id) {
+            // alert(dateRange);
+
+            document.getElementById(prevbutton).style.backgroundColor = 'white';
+            document.getElementById(prevbutton).style.color = 'black';
+
+            prevbutton = div_id;
+
+            document.getElementById(div_id).style.backgroundColor = '#2eacde';
+            document.getElementById(div_id).style.color = 'white';
+
+            let selectedRange = new Date();
+            let startDateString = '';
+            let endDateString = '';
+
+            switch(dateRange) {
+            case 'dttoday':
+                    startDateString = selectedRange.toISOString().slice(0,10);
+                    endDateString = selectedRange.toISOString().slice(0,10);
+                    hideCustomDates();
+                    break;
+            case 'dtthisweek':
+                    endDateString = selectedRange.toISOString().slice(0,10);
+                    selectedRange.setDate(selectedRange.getDate() - 7);
+                    startDateString = selectedRange.toISOString().slice(0,10);
+                    hideCustomDates();
+                    break;
+            case 'dtthismonth':
+                    endDateString = selectedRange.toISOString().slice(0,10);
+                    selectedRange.setDate(selectedRange.getDate() - 30);
+                    startDateString = selectedRange.toISOString().slice(0,10);
+                    hideCustomDates();
+                    break;
+            case 'dtcustomdates':
+                    showCustomDates();
+                    break;
+            default:
+            }
+            
+            // let dateString = selectedRange.toISOString().slice(0,10);
+            // alert('values to be shown > ' + dateString);
+            document.getElementById('selected_date_range').innerHTML = 'Data since "' + startDateString + '" until "' + endDateString + '"';
+            google.charts.setOnLoadCallback(initialize(startDateString, endDateString));
+        }
+
+        function showCustomDates() {
+            var x = document.getElementById("custom-dates");
+            x.style.display = "flex";
+            watchDateChange();
+        }
+
+        function hideCustomDates() {
+            var x = document.getElementById("custom-dates");
+            x.style.display = "none";
+
+            document.getElementById('message_for_custom_date').innerHTML = '.';
+
+            stopWatchingDateChange();
+        }
+
+        function watchDateChange() {
+            document.getElementById("filter_start_date").addEventListener("change", dateListener);
+
+            document.getElementById("filter_end_date").addEventListener("change", dateListener);
+        }
+
+        function dateListener() {
+                var input = this.value;
+                var dateEntered = new Date(input);
+                // alert(input); //e.g. 2015-11-13
+                // alert(dateEntered); //e.g. Fri Nov 13 2015 00:00:00 GMT+0000 (GMT Standard Time)
+
+                if(input){
+                document.getElementById('message_for_custom_date').innerHTML = '.';
+                }
+        }     
+
+        function stopWatchingDateChange() {
+            document.getElementById("filter_start_date").removeEventListener("change", dateListener);
+
+            document.getElementById("filter_end_date").removeEventListener("change", dateListener);
+        }
+
+        function customDateSubmitted() {
+            var filterStartDate = document.getElementById("filter_start_date").value;
+            var filterEndDate = document.getElementById("filter_end_date").value;
+
+            if (!(filterStartDate) || !(filterEndDate)) {
+                document.getElementById('message_for_custom_date').innerHTML = "Please select Start and End dates!";
+            } 
+            else {
+            document.getElementById('selected_date_range').innerHTML = 'Data since "' + filterStartDate + '" until "' + filterEndDate + '"';
+            google.charts.setOnLoadCallback(initialize(filterStartDate, filterEndDate));        
+            }
+        }    
+
+        // Load the Visualization API and the corechart package.
+        google.charts.load('current', {'packages':['corechart','table']});
+
+        // document.getElementById("custom-dates").style.display = "none";
+
+        // Set a callback to run when the Google Visualization API is loaded.
+        google.charts.setOnLoadCallback(initialLoad);
+
+        function initialLoad() {
+            document.getElementById('selected_date_range').innerHTML = 'Data since "' + initialStartDateString + '" until "' + initialEndDateString + '"';
+            initialize(initialStartDateString, initialEndDateString);
+        }
+
+        function initialize(startDate, endDate) {
+            var opts = {sendMethod: 'auto'};
+            // Replace the data source URL on next line with your data source URL.
+            var tablequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView', opts);
+
+            // startDate ? tablequery.setQuery(`select A,B,C,D,E where D > date '${startDate}'`): tablequery.setQuery('select A,B,C,D,E');
+            startDate ? (endDate ? (tablequery.setQuery(`select A,B,C,D,E where B >= date '${startDate}' and B <= date '${endDate}'`))
+                                : tablequery.setQuery(`select A,B,C,D,E where B >= date '${startDate}'`))
+                    : tablequery.setQuery('select A,B,C,D,E');
+            //tablequery.setQuery('select A,B,C,D,E');
+
+            // Send the query with a callback function.
+            tablequery.send(handleTableQueryResponse);
+
+        }
+
+        function numberWithCommas(x) {
+            x=x.toString();
+            var lastThree = x.substring(x.length-3);
+            var otherNumbers = x.substring(0,x.length-3);
+            if(otherNumbers != '')
+                lastThree = ',' + lastThree;
+            var res = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + lastThree;
+            // let modx = x.toString().replace(/\B(?=(\d{3})+(?!\d))/, ",");
+            // let modx = x.toString().replace(/(\d{3})$/, ",");
+            return res;
+        }
+
+    function handleTableQueryResponse(response) {
+            if (response.isError()) {
+            alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
+            return;
+            }
+
+            var cssClassNames = {
+                'headerRow': 'italic-darkblue-font large-font bold-font',
+                'tableRow': '',
+                'oddTableRow': 'beige-background',
+                'selectedTableRow': 'orange-background large-font bold-font',
+                'hoverTableRow': '',
+                'headerCell': 'gold-border',
+                'tableCell': 'center-text',
+                'rowNumberCell': 'italic-purple-font',
+                'justify': 'center',
+            };
+
+            var table_options = {'title':'Bus Utilization',
+                        //  'width':1240,
+                        //  'height':220,
+                            'cssClassNames': cssClassNames,
+                            'showRowNumber': true,
+                            'allowHtml': true,
+                            };
+
+            var tabledata = response.getDataTable();
+
+            var table = new google.visualization.Table(document.getElementById('table_div'));
+
+            table.draw(tabledata, table_options);
+        }
+
+    </script>
+    <link rel="stylesheet" type="text/css" href="rawdata.css"/>
+    </head>
+
+    <body>
+        <!--Div that will hold the pie chart-->
+    <div class="main-container">
+        <div class="navbar">
+            <a href="#">HOME</a>
+            <a href="#">STOP</a>
+            <a href="#">ROUTE</a>
+            <a href="#">OTHER</a>
+            </div>
+        <div class="header-container">
+                <p id="selected_date_range">Showing All Data</p>
+                <div class="btn-group">
+                    <button id="date_today" class="date-button" onclick="setDashboardDate('dttoday','date_today')"><span>Today</span></button>
+                    <button id="date_thisweek" class="date-button" onclick="setDashboardDate('dtthisweek','date_thisweek')"><span>Past 7 Days</span></button>
+                    <button id="date_thismonth" class="date-button" onclick="setDashboardDate('dtthismonth','date_thismonth')"><span>Past 30 days</span></button>
+                    <button id="date_custom" class="date-button" onclick="setDashboardDate('dtcustomdates','date_custom')"><span>Custom Date Range</span></button>
+                    <div id="custom-dates" class="custom-dates-container" style="display: none">
+                        <div class="date-labels"><Span>Start Date: </Span>
+                        <Span>End Date: </Span>
+                        </div>
+                        <div class="start-end-dates">
+                        <input id="filter_start_date" type="date">
+                        <input id="filter_end_date" type="date">
+                        </div>
+                        <div class="submit-date">
+                        <span class="date_selection_message" id="message_for_custom_date">.</span>
+                        <input id="custom_date_button" type="submit" onclick="customDateSubmitted()" >
+                        </div>
+                    </div>
+                </div>
+
+        </div>
+            <div class="dashboard-container">
+                                 <div id="table_div" ></div>
+            </div>   
+
+    <div class="footer-container">
+        <p id="footer_tab">1</p>
+    </div>
+    </div>
+    <script>
+        var accord = document.getElementsByClassName('accordion');
+        //  console.log(accord[0]);
+        var k;
+
+        for (k = 0; k < accord.length; k++) {
+            accord[k].addEventListener("click", function() {
+            this.classList.toggle("active");
+            var panel = this.nextElementSibling;
+            //  console.log(panel);
+            if (panel.style.display === "block") {
+                panel.style.display = "none";
+            } else {
+                panel.style.display = "block";
+            }
+            });
+        }
+
+    function toggle_visibility(id) {
+        var e = document.getElementById(id);
+        if(e.style.display == 'flex') {
+            e.style.display = 'none';
+        } else {
+            e.style.display = 'flex';
+        }
+    }
+
+        </script>
+    </body>
+    </html>
