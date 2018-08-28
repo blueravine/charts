@@ -122,68 +122,68 @@
 
     // Define the chart using setters:
     var lowrevenuewrap = new google.visualization.ChartWrapper();
-    var lowrevenuesql = startDate ? (endDate ? (`select F, SUM(E) where B >= date '${startDate}' and B <= date '${endDate}' group by F order by SUM(E) limit 10`)
-                                             : (`select F, SUM(E) where B >= date '${startDate}' group by F order by SUM(E) limit 10`))
-                                  : ('select F, SUM(E) group by F order by SUM(E) limit 10');
+    var lowrevenuesql = startDate ? (endDate ? (`select A, MIN(E) where B >= date '${startDate}' and B <= date '${endDate}' group by A order by MIN(E) limit 10`)
+                                             : (`select A, MIN(E) where B >= date '${startDate}' group by A order by MIN(E) limit 10`))
+                                  : ('select A, MIN(E) group by A order by MIN(E) limit 10');
 
     lowrevenuewrap.setChartType('ColumnChart');
     lowrevenuewrap.setDataSourceUrl('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView&headers=1');
     lowrevenuewrap.setContainerId('column_chart_div');
     lowrevenuewrap.setQuery(lowrevenuesql);
-    lowrevenuewrap.setOptions({'title': 'Bottom 10  Revenue by Depot',
+    lowrevenuewrap.setOptions({'title': 'Bottom 10 Route Revenue per day',
                                'backgroundColor': '#fafafa','legend':'bottom',});
     lowrevenuewrap.draw();
   
         var opts = {sendMethod: 'auto'};
 
           var toprevenuewrap = new google.visualization.ChartWrapper();
-          var toprevenuesql = startDate ? (endDate ? (`select F, SUM(E) where B >= date '${startDate}' and B <= date '${endDate}' group by F order by SUM(E) desc limit 10`)
-                                             : (`select F, SUM(E) where B >= date '${startDate}' group by F order by SUM(E) desc limit 10`))
-                                  : ('select F, SUM(E) group by F order by SUM(E) desc limit 10');
+          var toprevenuesql = startDate ? (endDate ? (`select A, MAX(E) where B >= date '${startDate}' and B <= date '${endDate}' group by A order by MAX(E) desc limit 10`)
+                                                  : (`select A, MAX(E) where B >= date '${startDate}' group by A order by MAX(E) desc limit 10`))
+                                        : ('select A, MAX(E) group by A order by MAX(E) desc limit 10');
 
           toprevenuewrap.setChartType('PieChart');
           toprevenuewrap.setDataSourceUrl('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView&headers=1');
           toprevenuewrap.setContainerId('pie_chart_div');
           toprevenuewrap.setQuery(toprevenuesql);
-          toprevenuewrap.setOptions({ 'title':'Top 10 Revenue by Depot',
-                                      'legend': 'left',
+          toprevenuewrap.setOptions({ 'title':'Top 10 Route Revenue per day',
+                                      'legend': 'bottom',
                                       'backgroundColor': '#fafafa',
                                       'pieHole': 0.6});
           toprevenuewrap.draw();
 
 
 
-        //   var lowutilizationwrap = new google.visualization.ChartWrapper();
-        //   var lowutilizationsql = startDate ? (endDate ? (`select A, MIN(C) where B >= date '${startDate}' and B <= date '${endDate}' group by A order by MIN(C) asc limit 10`)
-        //                                                : (`select A, MIN(C) where B >= date '${startDate}' group by A order by MIN(C) asc limit 10`))
-        //                                     : ('select A, MIN(C) group by A order by MIN(C) asc limit 10');
+          var lowutilizationwrap = new google.visualization.ChartWrapper();
+          var lowutilizationsql = startDate ? (endDate ? (`select A, MIN(C) where B >= date '${startDate}' and B <= date '${endDate}' group by A order by MIN(C) asc limit 10`)
+                                                       : (`select A, MIN(C) where B >= date '${startDate}' group by A order by MIN(C) asc limit 10`))
+                                            : ('select A, MIN(C) group by A order by MIN(C) asc limit 10');
 
-        //   lowutilizationwrap.setChartType('BarChart');
-        //   lowutilizationwrap.setDataSourceUrl('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView&headers=1');
-        //   lowutilizationwrap.setContainerId('bar_chart_div');
-        //   lowutilizationwrap.setQuery(lowutilizationsql);
-        //   lowutilizationwrap.setOptions({ 'title':'Bottom 10 Bus Utilization per day',
-        //                                   'backgroundColor': '#fafafa','legend':'bottom',});
-        //   lowutilizationwrap.draw();
+          lowutilizationwrap.setChartType('BarChart');
+          lowutilizationwrap.setDataSourceUrl('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView&headers=1');
+          lowutilizationwrap.setContainerId('bar_chart_div');
+          lowutilizationwrap.setQuery(lowutilizationsql);
+          lowutilizationwrap.setOptions({ 'title':'Bottom 10 Bus Utilization per day',
+                                          'backgroundColor': '#fafafa','legend':'bottom',});
+          lowutilizationwrap.draw();
 
-        //   var crowdedroutewrap = new google.visualization.ChartWrapper();
-        //   var crowdedroutesql = startDate ? (endDate ? (`select A, MAX(C) where B >= date '${startDate}' and B <= date '${endDate}' group by A order by MAX(C) desc limit 10`)
-        //                                              : (`select A, MAX(C) where B >= date '${startDate}' group by A order by MAX(C) desc limit 10`))
-        //                                   : ('select A, MAX(C) group by A order by MAX(C) desc limit 10');
+          var crowdedroutewrap = new google.visualization.ChartWrapper();
+          var crowdedroutesql = startDate ? (endDate ? (`select A, MAX(C) where B >= date '${startDate}' and B <= date '${endDate}' group by A order by MAX(C) desc limit 10`)
+                                                     : (`select A, MAX(C) where B >= date '${startDate}' group by A order by MAX(C) desc limit 10`))
+                                          : ('select A, MAX(C) group by A order by MAX(C) desc limit 10');
 
-        //   crowdedroutewrap.setChartType('ScatterChart');
-        //   crowdedroutewrap.setDataSourceUrl('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView&headers=1');
-        //   crowdedroutewrap.setContainerId('scatter_chart_div');
-        //   crowdedroutewrap.setQuery(crowdedroutesql);
-        //   crowdedroutewrap.setOptions({ 'title':'Top 10 Crowded Routes per day',
-        //                                   'backgroundColor': '#fafafa','legend':'bottom',});
-        //   crowdedroutewrap.draw();
+          crowdedroutewrap.setChartType('ScatterChart');
+          crowdedroutewrap.setDataSourceUrl('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView&headers=1');
+          crowdedroutewrap.setContainerId('scatter_chart_div');
+          crowdedroutewrap.setQuery(crowdedroutesql);
+          crowdedroutewrap.setOptions({ 'title':'Top 10 Crowded Routes per day',
+                                          'backgroundColor': '#fafafa','legend':'bottom',});
+          crowdedroutewrap.draw();
 
-        // var tablequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView', opts);
+        var tablequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView', opts);
 
-        // startDate ? (endDate ? (tablequery.setQuery(`select A,B,C,D,E where B >= date '${startDate}' and B <= date '${endDate}'`))
-        //                      : tablequery.setQuery(`select A,B,C,D,E where B >= date '${startDate}'`))
-        //           : tablequery.setQuery('select A,B,C,D,E');
+        startDate ? (endDate ? (tablequery.setQuery(`select A,B,C,D,E where B >= date '${startDate}' and B <= date '${endDate}'`))
+                             : tablequery.setQuery(`select A,B,C,D,E where B >= date '${startDate}'`))
+                  : tablequery.setQuery('select A,B,C,D,E');
 
         // // Send the query with a callback function.
         // tablequery.send(handleTableQueryResponse);
@@ -470,17 +470,17 @@ function handleTableQueryResponse(response) {
       }
 
 </script>
-<link rel="stylesheet" type="text/css" href="googlecharts.css"/>
+<link rel="stylesheet" type="text/css" href="routeview.css"/>
   </head>
 
   <body>
     <!--Div that will hold the pie chart-->
   <div class="main-container">
       <div class="navbar">
-          <a href="googlecharts.html">HOME</a>
-          <a href="stopview.html">STOP</a>
-          <a href="routeview.html">ROUTE</a>
-          <a href="rawdata.html">RAWDATA</a>
+        <a href="googlecharts.html">HOME</a>
+        <a href="stopview.html">STOP</a>
+        <a href="routeview.html">ROUTE</a>
+        <a href="rawdata.html">RAWDATA</a>
         </div>
       <div class="header-container">
             <p id="selected_date_range">Showing All Data</p>
@@ -510,7 +510,7 @@ function handleTableQueryResponse(response) {
             
         <div class = "data-container">
         <div class="highlights-container">
-          <div class="summary-card">
+                  <div class="summary-card">
                     <div id="total_in_service_div">
                       <p id="routes_in_service_title">ROUTES IN SERVICE<br><br>
                         <span id="routes_in_service" class="summary_metric">calculating...</span></p>
@@ -522,10 +522,7 @@ function handleTableQueryResponse(response) {
                         <span id="total_passengers" class="summary_metric">calculating...</span></p>
                     </div>
                   </div>
-                  <div class="summary-card" style="--summarybgcolor: rgb(255, 0, 200); --summarytextcolor: white">
-                    <img src="TSRTC_LOGO.png" width="60%" height="100%"/>
-                </div>
-                        <div class="summary-card" style="--summarybgcolor: greenyellow; --summarytextcolor: black">
+                  <div class="summary-card" style="--summarybgcolor: greenyellow; --summarytextcolor: black">
                     <div id="most_revenue_route_div">
                       <p id="most_revenue_route_title">MOST REVENUE ROUTE<br><br>
                         <span id="most_revenue_route" class="summary_metric">calculating...</span></p><br><br>
@@ -547,15 +544,12 @@ function handleTableQueryResponse(response) {
             <div class="charts-container">
                 <div class="charts-row">
                   <div class="charts-card">
-                  <!-- <div class="chart-render" id="scatter_chart_div"></div> -->
-                  <!-- <p class="chart-text" id="chart-text-id">Top 10 Routes that have carried the most number of passengers in one day, are shown in this scatter chart.</p> -->
-                  <img src="TSRTC's_Metro_Deluxe_Bus.jpg" height=70% width=70%/>                  
-                  <p class="chart-text" id="chart-text-id">This dashboard summarizes the view of TSRTC at bus depot level</p>
-                </div>
+                  <div class="chart-render" id="scatter_chart_div"></div>
+                  <p class="chart-text" id="chart-text-id">Top 10 Routes that have carried the most number of passengers in one day, are shown in this scatter chart.</p>
+                  </div>
                   <div class="charts-card">
-                  <!-- <div class="chart-render" id="bar_chart_div"></div> -->
-                  <!-- <p class="chart-text" id="chart-text-id">Top 10 Routes that have carried the most number of passengers in one day, are shown in this scatter chart.</p> -->
-                  <p class="chart-text" id="chart-text-id">This dashboard summarizes the view of TSRTC at bus depot level</p>
+                  <div class="chart-render" id="bar_chart_div"></div>
+                  <p class="chart-text" id="chart-text-id">Top 10 Routes that have carried the most number of passengers in one day, are shown in this scatter chart.</p>
                 </div>
                 </div>
                 <div class="charts-row">

@@ -130,12 +130,12 @@
         function initialize(startDate, endDate) {
             var opts = {sendMethod: 'auto'};
             // Replace the data source URL on next line with your data source URL.
-            var tablequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView', opts);
+            var tablequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView&headers=1', opts);
 
             // startDate ? tablequery.setQuery(`select A,B,C,D,E where D > date '${startDate}'`): tablequery.setQuery('select A,B,C,D,E');
-            startDate ? (endDate ? (tablequery.setQuery(`select A,B,C,D,E where B >= date '${startDate}' and B <= date '${endDate}'`))
-                                : tablequery.setQuery(`select A,B,C,D,E where B >= date '${startDate}'`))
-                    : tablequery.setQuery('select A,B,C,D,E');
+            startDate ? (endDate ? (tablequery.setQuery(`select A,B,C,D,E,F where B >= date '${startDate}' and B <= date '${endDate}'`))
+                                : tablequery.setQuery(`select A,B,C,D,E,F where B >= date '${startDate}'`))
+                    : tablequery.setQuery('select A,B,C,D,E,F');
             //tablequery.setQuery('select A,B,C,D,E');
 
             // Send the query with a callback function.
@@ -196,10 +196,10 @@
         <!--Div that will hold the pie chart-->
     <div class="main-container">
         <div class="navbar">
-            <a href="#">HOME</a>
+            <a href="googlecharts.html">HOME</a>
             <a href="#">STOP</a>
             <a href="#">ROUTE</a>
-            <a href="#">OTHER</a>
+            <a href="#">RAWDATA</a>
             </div>
         <div class="header-container">
                 <p id="selected_date_range">Showing All Data</p>

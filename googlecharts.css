@@ -16,14 +16,14 @@
 .navbar {
   display: flex;
   background-color: rgb(139, 139, 139);
-  flex: 5%;
+  flex: 3%;
   justify-content: space-evenly;
 }
 
 /* Style the navigation bar links */
 .navbar a {
   color: white;
-  padding: 10px 5px;
+  padding: 2px 5px;
   text-decoration: none;
   text-align: center;
   flex: 25%;
@@ -40,7 +40,8 @@
   flex-flow: row;
   /* width:100%;
   height: 100%; */
-  flex: 8%;
+  flex: 5%;
+  align-items: center;
   justify-content: center;
   background-color: #d7fc0565;
   background-image: linear-gradient(-90deg,#f0f0f0, #ffffff);
@@ -56,7 +57,7 @@
   flex-flow: row;
   /* width:100%;
   height: 100%; */
-  flex: 5%;
+  flex: 2%;
   justify-content: center;
   background-color: #05f5fd;
   /* background-color: red; */
@@ -75,9 +76,9 @@
   /* background-image: linear-gradient(-90deg,#f0f0f0, #ffffff); */
   /* width:100%;
   height: 100%; */
-  flex: 82%;
+  flex: 90%;
   margin: 0;
-  /* justify-content: space-between; */
+  justify-content: center;
 }
 
 .filters-container {
@@ -130,7 +131,7 @@
   flex-flow: column;
   /* background-color: #ffa602; */
   background-color: red; /*For browsers that do not support gradients*/
-  background-image: linear-gradient(-90deg,#f0f0f0, #ffffff); /* Standard syntax (must be last) */
+  background-image: linear-gradient(-90deg,#f0f0f0, #ffffff); /*Standard syntax (must be last) */
   /* width:100%;
   height: 100%; */
   flex: 82%;
@@ -182,7 +183,7 @@
 .custom-dates-container .submit-date {
   display: flex;
   flex-flow: column;
-  color: #FFFFFF;
+  color: rgb(250, 0, 0);
   align-items: flex-start;
   margin:0;
   justify-content: space-evenly;
@@ -196,7 +197,7 @@
 }
 
 .data-side-bar{
-  flex:20%;
+  flex:10%;
 }
 
 .highlights-container {
@@ -204,7 +205,9 @@
   flex-flow: row;
   /* width:100%;
   height: 100%; */
-  flex: 20%;
+  flex: 25%;
+  align-items: center;
+  justify-content: center;
 }
 
 .charts-container {
@@ -212,7 +215,7 @@
   flex-flow: row;
   /* width:100%;
   height: 100%; */
-  flex: 80%;
+  flex: 75%;
 }
 
 .tables-container {
@@ -287,7 +290,7 @@
 
 .summary_metric {
   font-weight: bold;
-  font-size: 1.4vw;
+  font-size: 1.2vw;
   /* font-size: 40; */
   text-align: center;
 }
@@ -297,16 +300,33 @@
 }
 
   .charts-card {
+      display: flex;
+      flex-flow: row;
       background-color: #fafafa;
       box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
       transition: 0.3s;
       /* width: 300; */
       /* height: 250; */
       margin: 5px;
+      flex: 50%;
   }
   
   .charts-card:hover {
       box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.26);
+  }
+
+  .charts-row {
+    display:flex;
+    flex: 50%;
+    flex-flow: column;
+  }
+
+  .chart-text {
+    flex: 20%;
+  }
+
+  .chart-render {
+    flex: 80%;
   }
   
   .tables-card {
@@ -324,12 +344,10 @@
   box-shadow: 0 8px 16px 0 rgba(0,0,0,0.26);
 }
 
-/* #table-div {
-  /* width: 100%;
-  height: 50%; */
-  /* display:table; */
-  /* flex: 100%; */
-} */
+#table-div {
+  justify-content: center;
+  flex:100%;
+} 
 
 .bold-green-font {
   font-weight: bold;
