@@ -1,19 +1,23 @@
 <html>
   <head>
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!--Load the AJAX API-->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">    <link rel="stylesheet" type="text/css" href="googlecharts.css"/>
+      <!--Load the AJAX API-->
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-        <script>
+    <script>
       var dashboardDate;
       var prevbutton = 'date_today';
 
-      let initialRange = new Date();
-      let initialStartDateString = '';
-      let initialEndDateString = '';
+      var selectedRange = new Date();
+      var startDateString = '';
+      var endDateString = '';
+      var selectedStopString = 'ALL';
 
-      initialRange.setDate(initialRange.getDate() - 1);
-      initialEndDateString = initialRange.toISOString().slice(0,10);
-      initialStartDateString = initialRange.toISOString().slice(0,10);
+      selectedRange.setDate(selectedRange.getDate() - 1);
+      endDateString = selectedRange.toISOString().slice(0,10);
+      startDateString = selectedRange.toISOString().slice(0,10);
+
+      selectedRange = new Date();
 
       function setDashboardDate(dateRange, div_id) {
 
@@ -25,9 +29,9 @@
         document.getElementById(div_id).style.backgroundColor = '#2eacde';
         document.getElementById(div_id).style.color = 'white';
 
-        let selectedRange = new Date();
-        let startDateString = '';
-        let endDateString = '';
+        // let selectedRange = new Date();
+        // let startDateString = '';
+        // let endDateString = '';
 
         switch(dateRange) {
           case 'dttoday':
@@ -53,8 +57,11 @@
           default:
         }
         
-        document.getElementById('selected_date_range').innerHTML = 'Data since "' + startDateString + '" until "' + endDateString + '"';
-        google.charts.setOnLoadCallback(initialize(startDateString, endDateString));
+        // document.getElementById('selected_date_range').innerHTML = 'Data since "' + startDateString + '" until "' + endDateString + '"';
+        document.getElementById('selected-start-label-id').innerHTML = 'Showing data between Start Date: ' + startDateString;
+        document.getElementById('selected-end-label-id').innerHTML = 'End Date: ' + endDateString;
+        
+        google.charts.setOnLoadCallback(initialize(startDateString, endDateString, selectedStopString));
       }
 
       function showCustomDates() {
@@ -101,8 +108,11 @@
             document.getElementById('message_for_custom_date').innerHTML = "Please select Start and End dates!";
         } 
         else {
-          document.getElementById('selected_date_range').innerHTML = 'Data since "' + filterStartDate + '" until "' + filterEndDate + '"';
-        google.charts.setOnLoadCallback(initialize(filterStartDate, filterEndDate));        
+          // document.getElementById('selected_date_range').innerHTML = 'Data since "' + filterStartDate + '" until "' + filterEndDate + '"';
+          document.getElementById('selected-start-label-id').innerHTML = 'Showing data between Start Date: ' + filterStartDate;
+          document.getElementById('selected-end-label-id').innerHTML = 'End Date: ' + filterEndDate;
+
+        google.charts.setOnLoadCallback(initialize(filterStartDate, filterEndDate, selectedStopString));        
         }
       }    
 
@@ -114,123 +124,132 @@
       google.charts.setOnLoadCallback(initialLoad);
 
       function initialLoad() {
-        document.getElementById('selected_date_range').innerHTML = 'Data since "' + initialStartDateString + '" until "' + initialEndDateString + '"';
-        initialize(initialStartDateString, initialEndDateString);
+        // document.getElementById('selected_date_range').innerHTML = 'Data since "' + initialStartDateString + '" until "' + initialEndDateString + '"';
+        document.getElementById('selected-start-label-id').innerHTML = 'Showing data between Start Date: ' + startDateString;
+        document.getElementById('selected-end-label-id').innerHTML = 'End Date: ' + endDateString;
+
+        initialize(startDateString, endDateString, selectedStopString);
       }
 
-      function initialize(startDate, endDate) {
+      function initialize(startDate, endDate, stop) {
 
     // Define the chart using setters:
-    var lowrevenuewrap = new google.visualization.ChartWrapper();
-    var lowrevenuesql = startDate ? (endDate ? (`select A, MIN(E) where B >= date '${startDate}' and B <= date '${endDate}' group by A order by MIN(E) limit 10`)
-                                             : (`select A, MIN(E) where B >= date '${startDate}' group by A order by MIN(E) limit 10`))
-                                  : ('select A, MIN(E) group by A order by MIN(E) limit 10');
+    var lowcrowdedwrap = new google.visualization.ChartWrapper();
+    var lowcrowdedsql = (stop && (stop !== 'ALL'))
+                                ? (startDate ? (endDate ? (`select B, SUM(C) where A = '${stop}' and B >= date '${startDate}' and B <= date '${endDate}' group by B order by SUM(C) limit 10`)
+                                                        : (`select A, SUM(C) where A = '${stop}' and B >= date '${startDate}' group by A order by SUM(C) limit 10`))
+                                             : (`select A, SUM(C) where A = '${stop}' group by A order by SUM(C) limit 10`))
+                                : (startDate ? (endDate ? (`select A, SUM(C) where B >= date '${startDate}' and B <= date '${endDate}' group by A order by SUM(C) limit 10`)
+                                                        : (`select A, SUM(C) where B >= date '${startDate}' group by A order by SUM(C) limit 10`))
+                                             : ('select A, SUM(C) group by A order by SUM(C) limit 10'));
 
-    lowrevenuewrap.setChartType('ColumnChart');
-    lowrevenuewrap.setDataSourceUrl('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView&headers=1');
-    lowrevenuewrap.setContainerId('column_chart_div');
-    lowrevenuewrap.setQuery(lowrevenuesql);
-    lowrevenuewrap.setOptions({'title': 'Bottom 10 Route Revenue per day',
+    lowcrowdedwrap.setChartType('ScatterChart');
+    lowcrowdedwrap.setDataSourceUrl('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=StopView&headers=1');
+    lowcrowdedwrap.setContainerId('column_chart_div');
+    lowcrowdedwrap.setQuery(lowcrowdedsql);
+    lowcrowdedwrap.setOptions({'title': 'Bottom 10 Crowded',
                                'backgroundColor': '#fafafa','legend':'bottom',});
-    lowrevenuewrap.draw();
+    lowcrowdedwrap.draw();
   
         var opts = {sendMethod: 'auto'};
 
-          var toprevenuewrap = new google.visualization.ChartWrapper();
-          var toprevenuesql = startDate ? (endDate ? (`select A, MAX(E) where B >= date '${startDate}' and B <= date '${endDate}' group by A order by MAX(E) desc limit 10`)
-                                                  : (`select A, MAX(E) where B >= date '${startDate}' group by A order by MAX(E) desc limit 10`))
-                                        : ('select A, MAX(E) group by A order by MAX(E) desc limit 10');
+          var topcrowdedwrap = new google.visualization.ChartWrapper();
+          var topcrowdedsql = (stop && (stop !== 'ALL'))
+                                ? (startDate ? (endDate ? (`select B, SUM(C) where A = '${stop}' and B >= date '${startDate}' and B <= date '${endDate}' group by B order by SUM(C) desc limit 10`)
+                                                        : (`select A, SUM(C) where A = '${stop}' and B >= date '${startDate}' group by A order by SUM(C) desc limit 10`))
+                                             : (`select A, SUM(C) where A = '${stop}' group by A order by SUM(C) desc limit 10`))
+                                : (startDate ? (endDate ? (`select A, SUM(C) where B >= date '${startDate}' and B <= date '${endDate}' group by A order by SUM(C) desc limit 10`)
+                                                        : (`select A, SUM(C) where B >= date '${startDate}' group by A order by SUM(C) desc limit 10`))
+                                             : ('select A, SUM(C) group by A order by SUM(C) desc limit 10'));
 
-          toprevenuewrap.setChartType('PieChart');
-          toprevenuewrap.setDataSourceUrl('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView&headers=1');
-          toprevenuewrap.setContainerId('pie_chart_div');
-          toprevenuewrap.setQuery(toprevenuesql);
-          toprevenuewrap.setOptions({ 'title':'Top 10 Route Revenue per day',
-                                      'legend': 'bottom',
+          topcrowdedwrap.setChartType('BarChart');
+          topcrowdedwrap.setDataSourceUrl('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=StopView&headers=1');
+          topcrowdedwrap.setContainerId('pie_chart_div');
+          topcrowdedwrap.setQuery(topcrowdedsql);
+          topcrowdedwrap.setOptions({ 'title':'Top 10 Crowded',
+                                      'legend': 'left',
                                       'backgroundColor': '#fafafa',
-                                      'pieHole': 0.6});
-          toprevenuewrap.draw();
+                                      });
+          topcrowdedwrap.draw();
+
+          // var crowdedroutewrap = new google.visualization.ChartWrapper();
+          // var crowdedroutesql = startDate ? (endDate ? (`select A, MAX(C) where B >= date '${startDate}' and B <= date '${endDate}' group by A order by MAX(C) desc limit 10`)
+          //                                            : (`select A, MAX(C) where B >= date '${startDate}' group by A order by MAX(C) desc limit 10`))
+          //                                 : ('select A, MAX(C) group by A order by MAX(C) desc limit 10');
+
+          // crowdedroutewrap.setChartType('ScatterChart');
+          // crowdedroutewrap.setDataSourceUrl('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=StopView&headers=1');
+          // crowdedroutewrap.setContainerId('scatter_chart_div');
+          // crowdedroutewrap.setQuery(crowdedroutesql);
+          // crowdedroutewrap.setOptions({ 'title':'Top 10 Crowded Routes per day',
+          //                                 'backgroundColor': '#fafafa','legend':'bottom',});
+          // crowdedroutewrap.draw();
 
 
-
-          var lowutilizationwrap = new google.visualization.ChartWrapper();
-          var lowutilizationsql = startDate ? (endDate ? (`select A, MIN(C) where B >= date '${startDate}' and B <= date '${endDate}' group by A order by MIN(C) asc limit 10`)
-                                                       : (`select A, MIN(C) where B >= date '${startDate}' group by A order by MIN(C) asc limit 10`))
-                                            : ('select A, MIN(C) group by A order by MIN(C) asc limit 10');
-
-          lowutilizationwrap.setChartType('BarChart');
-          lowutilizationwrap.setDataSourceUrl('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView&headers=1');
-          lowutilizationwrap.setContainerId('bar_chart_div');
-          lowutilizationwrap.setQuery(lowutilizationsql);
-          lowutilizationwrap.setOptions({ 'title':'Bottom 10 Bus Utilization per day',
-                                          'backgroundColor': '#fafafa','legend':'bottom',});
-          lowutilizationwrap.draw();
-
-          var crowdedroutewrap = new google.visualization.ChartWrapper();
-          var crowdedroutesql = startDate ? (endDate ? (`select A, MAX(C) where B >= date '${startDate}' and B <= date '${endDate}' group by A order by MAX(C) desc limit 10`)
-                                                     : (`select A, MAX(C) where B >= date '${startDate}' group by A order by MAX(C) desc limit 10`))
-                                          : ('select A, MAX(C) group by A order by MAX(C) desc limit 10');
-
-          crowdedroutewrap.setChartType('ScatterChart');
-          crowdedroutewrap.setDataSourceUrl('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView&headers=1');
-          crowdedroutewrap.setContainerId('scatter_chart_div');
-          crowdedroutewrap.setQuery(crowdedroutesql);
-          crowdedroutewrap.setOptions({ 'title':'Top 10 Crowded Routes per day',
-                                          'backgroundColor': '#fafafa','legend':'bottom',});
-          crowdedroutewrap.draw();
-
-        var tablequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView', opts);
-
-        startDate ? (endDate ? (tablequery.setQuery(`select A,B,C,D,E where B >= date '${startDate}' and B <= date '${endDate}'`))
-                             : tablequery.setQuery(`select A,B,C,D,E where B >= date '${startDate}'`))
-                  : tablequery.setQuery('select A,B,C,D,E');
+        // Replace the data source URL on next line with your data source URL.
+        // var servicequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=StopView&headers=1', opts);
+        
+        // (stop && (stop !== 'ALL'))
+        //         ? (startDate ? (endDate ? servicequery.setQuery(`select A where F = '${stop}' and B >= date '${startDate}' and B <= date '${endDate}'`)
+        //                                 : servicequery.setQuery(`select A where F = '${stop}' and B >= date '${startDate}'`))
+        //                      : servicequery.setQuery(`select A where F = '${stop}'`))
+        //         : (startDate ? (endDate ? servicequery.setQuery(`select A where B >= date '${startDate}' and B <= date '${endDate}'`)
+        //                                 : servicequery.setQuery(`select A where B >= date '${startDate}'`))
+        //                      : servicequery.setQuery('select A'));
 
         // // Send the query with a callback function.
-        // tablequery.send(handleTableQueryResponse);
+        // servicequery.send(handleServiceQueryResponse);
 
-        // Replace the data source URL on next line with your data source URL.
-        var servicequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView', opts);
-        
-        startDate ? (endDate ? servicequery.setQuery(`select A where B >= date '${startDate}' and B <= date '${endDate}'`)
-                             : servicequery.setQuery(`select A where B >= date '${startDate}'`))
-                  : servicequery.setQuery('select A');
+        var crowdedstopquery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=StopView&headers=1', opts);
 
-        // Send the query with a callback function.
-        servicequery.send(handleServiceQueryResponse);
-
-        // Replace the data source URL on next line with your data source URL.
-        var passengerquery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView', opts);
-
-        startDate ? (endDate ? passengerquery.setQuery(`select SUM(C) where B >= date '${startDate}' and B <= date '${endDate}'`)
-                             : passengerquery.setQuery(`select SUM(C) where B >= date '${startDate}'`))
-                  : passengerquery.setQuery('select SUM(C)');
-
-        // Send the query with a callback function.
-        passengerquery.send(handlePassengerQueryResponse);
-
-        var busyroutequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView', opts);
-
-        startDate ? (endDate ? busyroutequery.setQuery(`select A, MAX(C)  where B >= date '${startDate}' and B <= date '${endDate}' group by A order by MAX(C) desc`)
-                             : busyroutequery.setQuery(`select A, MAX(C)  where B >= date '${startDate}' group by A order by MAX(C) desc`))
-                  : busyroutequery.setQuery('select A, MAX(C) group by A order by MAX(C) desc');
-
-        // Send the query with a callback function.
-        busyroutequery.send(handleBusyRouteQueryResponse);
-
-        var crowdedstopquery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=StopView', opts);
-
-        startDate ? (endDate ? crowdedstopquery.setQuery(`select A, MAX(E) where B >= date '${startDate}' and B <= date '${endDate}' group by A order by MAX(E) desc`)
-                             : crowdedstopquery.setQuery(`select A, MAX(E) where B >= date '${startDate}' group by A order by MAX(E) desc`))
-                  : crowdedstopquery.setQuery('select A, MAX(E) group by A order by MAX(E) desc');
+        (stop && (stop !== 'ALL'))
+                                ? (startDate ? (endDate ? (`select A, SUM(C) where A = '${stop}' and B >= date '${startDate}' and B <= date '${endDate}' group by A order by SUM(C) desc limit 1`)
+                                                        : (`select A, SUM(C) where A = '${stop}' and B >= date '${startDate}' group by A order by SUM(C) desc limit 1`))
+                                             : (`select A, SUM(C) where A = '${stop}' group by A order by SUM(C) desc limit 1`))
+                                : (startDate ? (endDate ? (`select A, SUM(C) where B >= date '${startDate}' and B <= date '${endDate}' group by A order by SUM(C) desc limit 1`)
+                                                        : (`select A, SUM(C) where B >= date '${startDate}' group by A order by SUM(C) desc limit 1`))
+                                             : ('select A, SUM(C) group by A order by SUM(C) desc limit 1'));
 
         // Send the query with a callback function.
         crowdedstopquery.send(handleCrowdedStopQueryResponse);
 
-        var revenueroutequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView&headers=1', opts);
 
-        startDate ? (endDate ? revenueroutequery.setQuery(`select A, MAX(E) where B >= date '${startDate}' and B <= date '${endDate}' group by A order by MAX(E) desc`)
+        // Replace the data source URL on next line with your data source URL.
+        var passengerquery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=StopView&headers=1', opts);
+
+        (stop && (stop !== 'ALL'))
+              ? (startDate ? (endDate ? passengerquery.setQuery(`select SUM(C) where A = '${stop}' and B >= date '${startDate}' and B <= date '${endDate}'`)
+                                 : passengerquery.setQuery(`select SUM(C) where A = '${stop}' and B >= date '${startDate}'`))
+                        : passengerquery.setQuery(`select SUM(C) where A = '${stop}'`))
+              : (startDate ? (endDate ? passengerquery.setQuery(`select SUM(C) where B >= date '${startDate}' and B <= date '${endDate}'`)
+                                 : passengerquery.setQuery(`select SUM(C) where B >= date '${startDate}'`))
+                        : passengerquery.setQuery('select SUM(C)'));
+
+        // Send the query with a callback function.
+        passengerquery.send(handlePassengerQueryResponse);
+
+        var busyroutequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=StopView&headers=1', opts);
+
+        (stop && (stop !== 'ALL'))
+                ? (startDate ? (endDate ? busyroutequery.setQuery(`select A, MAX(C)  where F = '${stop}' and B >= date '${startDate}' and B <= date '${endDate}' group by A order by MAX(C) desc`)
+                             : busyroutequery.setQuery(`select A, MAX(C)  where F = '${stop}' and B >= date '${startDate}' group by A order by MAX(C) desc`))
+                      : busyroutequery.setQuery(`select A, MAX(C) where F = '${stop}' group by A order by MAX(C) desc`))
+                : (startDate ? (endDate ? busyroutequery.setQuery(`select A, MAX(C)  where B >= date '${startDate}' and B <= date '${endDate}' group by A order by MAX(C) desc`)
+                             : busyroutequery.setQuery(`select A, MAX(C)  where B >= date '${startDate}' group by A order by MAX(C) desc`))
+                      : busyroutequery.setQuery('select A, MAX(C) group by A order by MAX(C) desc'));
+
+        // Send the query with a callback function.
+        busyroutequery.send(handleBusyRouteQueryResponse);
+
+        var revenueroutequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=StopView&headers=1', opts);
+
+        (stop && (stop !== 'ALL'))
+                ? (startDate ? (endDate ? revenueroutequery.setQuery(`select A, MAX(E) where F = '${stop}' and B >= date '${startDate}' and B <= date '${endDate}' group by A order by MAX(E) desc`)
+                             : revenueroutequery.setQuery(`select A, MAX(E) where F = '${stop}' and B >= date '${startDate}' group by A order by MAX(E) desc`))
+                      : revenueroutequery.setQuery(`select A, MAX(E) where F = '${stop}' group by A order by MAX(E) desc`))
+                : (startDate ? (endDate ? revenueroutequery.setQuery(`select A, MAX(E) where B >= date '${startDate}' and B <= date '${endDate}' group by A order by MAX(E) desc`)
                              : revenueroutequery.setQuery(`select A, MAX(E) where B >= date '${startDate}' group by A order by MAX(E) desc`))
-                  : revenueroutequery.setQuery('select A, MAX(E) group by A order by MAX(E) desc');
+                     : revenueroutequery.setQuery('select A, MAX(E) group by A order by MAX(E) desc'));
 
         // Send the query with a callback function.
         revenueroutequery.send(handleRevenueRouteQueryResponse);
@@ -245,92 +264,6 @@
             lastThree = ',' + lastThree;
         var res = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + lastThree;
         return res;
-      }
-
-      function handleQueryResponse(response) {
-
-        if (response.isError()) {
-          alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
-          return;
-        }
-        var options = {'title':'Bottom 10 Route Revenue per day',
-                       'backgroundColor': '#fafafa'};
-
-        var data = response.getDataTable();
-        var column_chart = new google.visualization.ColumnChart(document.getElementById('column_chart_div'));
-
-        column_chart.draw(data, options);
-
-       }
-
-function handleTopRevenueChart(response) {
-
-      if (response.isError()) {
-        alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
-        return;
-      }
-
-      var toprevenueoptions = {'title':'Top 10 Route Revenue per day',
-                    'legend': 'left',
-                    'backgroundColor': '#fafafa',
-                    'pieHole': 0.9};
-
-      var toprevenuedata = response.getDataTable();
-      var toprevenuechart = new google.visualization.PieChart(document.getElementById('pie_chart_div'));
-
-      toprevenuechart.draw(toprevenuedata, toprevenueoptions);
-}
-
-function handleCrowdedRevenueChart(response) {
-
-        if (response.isError()) {
-          alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
-          return;
-        }
-        var revenuechartoptions = {'title':'Top 10 Crowded Routes per day',
-                      'backgroundColor': '#fafafa'};
-
-        var revenuechartdata = response.getDataTable();
-        var line_chart = new google.visualization.ScatterChart(document.getElementById('scatter_chart_div'));
-
-        line_chart.draw(revenuechartdata, revenuechartoptions);
-
-}
-
-function handleLowtUtilizationChart(response) {
-
-        if (response.isError()) {
-          alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
-          return;
-        }
-        var lowutilizationoptions = {'title':'Bottom 10 Bus Utilization per day',
-                      'backgroundColor': '#fafafa'};
-
-        var lowutilizationdata = response.getDataTable();
-        var bar_chart = new google.visualization.BarChart(document.getElementById('bar_chart_div'));
-
-        bar_chart.draw(lowutilizationdata, lowutilizationoptions);
-}
-
-
-function handleTableQueryResponse(response) {
-        if (response.isError()) {
-          alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
-          return;
-        }
-
-          var cssClassNames = {
-              'headerRow': 'italic-darkblue-font large-font bold-font',
-              'tableRow': '',
-              'oddTableRow': 'beige-background',
-              'selectedTableRow': 'orange-background large-font bold-font',
-              'hoverTableRow': '',
-              'headerCell': 'gold-border',
-              'tableCell': 'center-text',
-              'rowNumberCell': 'italic-purple-font',
-              'justify': 'center',
-          };
-
       }
 
       function handleServiceQueryResponse(response) {
@@ -386,34 +319,6 @@ function handleTableQueryResponse(response) {
         }
     }
 
-      function handleCrowdedStopQueryResponse(response) {
-
-        if (response.isError()) {
-          alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
-          return;
-        }
-        var crowdedstopoptions = {'title':'Bus Utilization',
-                      'width':250,
-                      'height':200};
-
-        var crowdedstopdata = response.getDataTable();
-
-        try {
-          document.getElementById('most_crowded_stop').innerHTML = crowdedstopdata.getValue(0,0)
-           + '<br><span style="font-size:1vw"}>(# passengers: ' + numberWithCommas(crowdedstopdata.getValue(0,1)) + ')</span>';
-        }
-        catch(err) {
-          switch (err.message) {
-            case 'Table has no rows.' :
-                  document.getElementById('most_crowded_stop').innerHTML = 0  + '/-<br><span style="font-size:18"}>(No data for selected date)</span>';
-                  break;
-            default :
-                  document.getElementById('most_crowded_stop').innerHTML = 0;
-          }
-        }
-        
-      }
-
       function handleBusyRouteQueryResponse(response) {
 
           if (response.isError()) {
@@ -427,15 +332,15 @@ function handleTableQueryResponse(response) {
           var busyroutedata = response.getDataTable();
 
         try {
-          document.getElementById('most_busy_route').innerHTML = busyroutedata.getValue(0,0);
+          document.getElementById('most_alighted_stop').innerHTML = busyroutedata.getValue(0,0);
         }
         catch(err) {
           switch (err.message) {
             case 'Table has no rows.' :
-                  document.getElementById('most_busy_route').innerHTML = 0  + '/-<br><span style="font-size:18"}>(No data for selected date)</span>';
+                  document.getElementById('most_alighted_stop').innerHTML = 0  + '/-<br><span style="font-size:18"}>(No data for selected date)</span>';
                   break;
             default :
-                  document.getElementById('most_busy_route').innerHTML = 0;
+                  document.getElementById('most_alighted_stop').innerHTML = 0;
           }
         }
 
@@ -454,43 +359,299 @@ function handleTableQueryResponse(response) {
           var revenueroutedata = response.getDataTable();
 
         try {
-          document.getElementById('most_revenue_route').innerHTML = '&#8377;' + numberWithCommas(revenueroutedata.getValue(0,1))
-           + '/-<br><span style="font-size:1vw"}>(Route #: ' + revenueroutedata.getValue(0,0) + ')</span>';
+          document.getElementById('most_boarded_stop').innerHTML = revenueroutedata.getValue(0,1)
+           + '<br><span style="font-size:1vw"}>(Stop : ' + revenueroutedata.getValue(0,0) + ')</span>';
         }
         catch(err) {
           switch (err.message) {
             case 'Table has no rows.' :
-                  document.getElementById('most_revenue_route').innerHTML = 0  + '/-<br><span style="font-size:18"}>(No data for selected date)</span>';
+                  document.getElementById('most_boarded_stop').innerHTML = 0  + '/-<br><span style="font-size:18"}>(No data for selected date)</span>';
                   break;
             default :
-                  document.getElementById('most_revenue_route').innerHTML = 0;
+                  document.getElementById('most_boarded_stop').innerHTML = 0;
           }
         }
 
       }
 
+      function handleCrowdedStopQueryResponse(response) {
+
+          if (response.isError()) {
+            alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
+            return;
+          }
+          var crowdedstopoptions = {'title':'Bus Utilization',
+                        'width':250,
+                        'height':200};
+
+          var crowdedstopdata = response.getDataTable();
+
+          try {
+            document.getElementById('most_crowded_stop').innerHTML = crowdedstopdata.getValue(0,0)
+            + '<br><span style="font-size:1vw"}>(# passengers: ' + numberWithCommas(crowdedstopdata.getValue(0,2)) + ')</span>';
+          }
+          catch(err) {
+            switch (err.message) {
+              case 'Table has no rows.' :
+                    document.getElementById('most_crowded_stop').innerHTML = 0  + '/-<br><span style="font-size:18"}>(No data for selected date)</span>';
+                    break;
+              default :
+                    document.getElementById('most_crowded_stop').innerHTML = 0;
+            }
+          }
+
+      }
+
+
+      function stopSelection() {
+          selectedStopString = document.getElementById("filter_stop_id").value;
+          initialize(startDateString, endDateString, selectedStopString);
+      }
+
+
 </script>
-<link rel="stylesheet" type="text/css" href="stopview.css"/>
   </head>
 
   <body>
     <!--Div that will hold the pie chart-->
-  <div class="main-container">
+    <!-- <div id="mySidenav" class="sidenav">
+      <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+      <a href="#">Services</a>
+      <a href="#">Clients</a>
+      <a href="#">Contact</a>
+    </div>
+    
+    <span style="font-size:30px;cursor:pointer" onclick="openNav()">&#9776;</span> -->
+
+<div class="main-container" id="main-container-id">
       <div class="navbar">
-        <a href="googlecharts.html">HOME</a>
-        <a href="stopview.html">STOP</a>
-        <a href="routeview.html">ROUTE</a>
-        <a href="rawdata.html">RAWDATA</a>
+          <a href="googlecharts.html"><i class="fa fa-home"></i>   HOME</a>
+          <a href="stopview.html" class="active-page"><i class="fas fa-map-pin"></i>   BUS STOP</a>
+          <a href="routeview.html"><i class="fas fa-route"></i>   ROUTE</a>
+          <a href="rawdata.html"><i class="fas fa-table"></i>   RAWDATA</a>
         </div>
-      <div class="header-container">
-            <p id="selected_date_range">Showing All Data</p>
+      <div class="header-container" id="header-continer-id">
+            <div class="stops_list"><Span class="stop-label">Stop: </Span>
+
+              <select id="filter_stop_id" class="filter_stop" onchange="stopSelection()">
+                    <option value="ALL" selected="selected">ALL</option>
+                    <option value="A G Colony">A G Colony</option>
+                    <option value="A.S.Rao Nagar Bus Stop">A.S.Rao Nagar Bus Stop</option>
+                    <option value="Acharya N G Ranga Agricultural University">Acharya N G Ranga Agricultural University</option>
+                    <option value="Afzalgunj Bus Stop">Afzalgunj Bus Stop</option>
+                    <option value="Ahmed Nagar">Ahmed Nagar</option>
+                    <option value="Air Force Academy(Dundigal)">Air Force Academy(Dundigal)</option>
+                    <option value="Alkapuri Bus Stop">Alkapuri Bus Stop</option>
+                    <option value="Allwyn Colony Bus Stop">Allwyn Colony Bus Stop</option>
+                    <option value="Almasguda Bus Stop">Almasguda Bus Stop</option>
+                    <option value="Ambedkar Nagar(Chinthal Basthi)">Ambedkar Nagar(Chinthal Basthi)</option>
+                    <option value="Ambedkar Nagar(Kapra)">Ambedkar Nagar(Kapra)</option>
+                    <option value="Ankireddipalli Bus Stop">Ankireddipalli Bus Stop</option>
+                    <option value="Apuroopa Bus Stop">Apuroopa Bus Stop</option>
+                    <option value="Arutla">Arutla</option>
+                    <option value="BHEL">BHEL</option>
+                    <option value="BN Reddy Nagar Bus Stop">BN Reddy Nagar Bus Stop</option>
+                    <option value="Bachupally">Bachupally</option>
+                    <option value="Bahadurpally">Bahadurpally</option>
+                    <option value="Balaji Nagar bus stop(Balaji Nagar)">Balaji Nagar bus stop(Balaji Nagar)</option>
+                    <option value="Balanagar Bus Stop">Balanagar Bus Stop</option>
+                    <option value="Balapur">Balapur</option>
+                    <option value="Bapu Ghat">Bapu Ghat</option>
+                    <option value="Barkas">Barkas</option>
+                    <option value="Bhudevi Nagar">Bhudevi Nagar</option>
+                    <option value="Bldg blocks">Bldg blocks</option>
+                    <option value="Boduppal">Boduppal</option>
+                    <option value="Bogaram Bus Stop">Bogaram Bus Stop</option>
+                    <option value="Bolarum Bus Station">Bolarum Bus Station</option>
+                    <option value="Borabanda Bus Stop">Borabanda Bus Stop</option>
+                    <option value="Bowrampet">Bowrampet</option>
+                    <option value="Brahmanpally">Brahmanpally</option>
+                    <option value="CBS Bus Stop">CBS Bus Stop</option>
+                    <option value="Chandulal Baradari">Chandulal Baradari</option>
+                    <option value="Charminar Bus Stop">Charminar Bus Stop</option>
+                    <option value="Cherlapally Bus Stop">Cherlapally Bus Stop</option>
+                    <option value="Church Colony">Church Colony</option>
+                    <option value="Dabilpur">Dabilpur</option>
+                    <option value="Dammaiguda(lake)">Dammaiguda(lake)</option>
+                    <option value="Dandumailaram">Dandumailaram</option>
+                    <option value="Deshmukhi">Deshmukhi</option>
+                    <option value="Dharmaram">Dharmaram</option>
+                    <option value="Dilsukhnagar Bus station">Dilsukhnagar Bus station</option>
+                    <option value="Doodh Bowli">Doodh Bowli</option>
+                    <option value="Dundigal Airbase">Dundigal Airbase</option>
+                    <option value="ECIL Bus Stop">ECIL Bus Stop</option>
+                    <option value="ESI Bus Stop">ESI Bus Stop</option>
+                    <option value="Falaknuma">Falaknuma</option>
+                    <option value="Film Nagar">Film Nagar</option>
+                    <option value="GPRA QTRS">GPRA QTRS</option>
+                    <option value="Gachibowli Bus Station">Gachibowli Bus Station</option>
+                    <option value="Gajularamaram">Gajularamaram</option>
+                    <option value="Ganeshpuri Colony">Ganeshpuri Colony</option>
+                    <option value="Gangaputra Colony Bus Stop">Gangaputra Colony Bus Stop</option>
+                    <option value="Gayatri Hills">Gayatri Hills</option>
+                    <option value="Geological Survey of India">Geological Survey of India</option>
+                    <option value="Gokhle Nagar">Gokhle Nagar</option>
+                    <option value="Golkonda Bus Stop">Golkonda Bus Stop</option>
+                    <option value="Gowdavalli">Gowdavalli</option>
+                    <option value="HCL Colony">HCL Colony</option>
+                    <option value="HCU Campus">HCU Campus</option>
+                    <option value="HMT colony">HMT colony</option>
+                    <option value="HUDA Complex">HUDA Complex</option>
+                    <option value="Hakimpet">Hakimpet</option>
+                    <option value="Hayath Nagar Bus Stop">Hayath Nagar Bus Stop</option>
+                    <option value="High Court(Post Office)">High Court(Post Office)</option>
+                    <option value="Himayat Sagar Road">Himayat Sagar Road</option>
+                    <option value="Hitech City Bus Stop">Hitech City Bus Stop</option>
+                    <option value="Hitech City MMTS Station">Hitech City MMTS Station</option>
+                    <option value="I S Sadan Complex">I S Sadan Complex</option>
+                    <option value="Ibrahimpatnam Bus Station">Ibrahimpatnam Bus Station</option>
+                    <option value="JBS Bus Stop">JBS Bus Stop</option>
+                    <option value="JNTU(Kukatpally) Bus Stop">JNTU(Kukatpally) Bus Stop</option>
+                    <option value="Jagadgiri Gutta Bus Stop">Jagadgiri Gutta Bus Stop</option>
+                    <option value="Jagapathi Hills">Jagapathi Hills</option>
+                    <option value="Jaheer Nagar">Jaheer Nagar</option>
+                    <option value="Jamal Colony">Jamal Colony</option>
+                    <option value="Jana Priya West City">Jana Priya West City</option>
+                    <option value="Janapriya Colony Bus Stop">Janapriya Colony Bus Stop</option>
+                    <option value="Jayapuri Colony">Jayapuri Colony</option>
+                    <option value="Jeedimetla Bus Stop">Jeedimetla Bus Stop</option>
+                    <option value="Jinnaram">Jinnaram</option>
+                    <option value="KK nagar">KK nagar</option>
+                    <option value="KPHB Colony Bus Stop">KPHB Colony Bus Stop</option>
+                    <option value="KPHB Colony MIG">KPHB Colony MIG</option>
+                    <option value="KPHB IVth phase">KPHB IVth phase</option>
+                    <option value="Kachiguda Bus Stop">Kachiguda Bus Stop</option>
+                    <option value="Kalimandir">Kalimandir</option>
+                    <option value="Kanapur">Kanapur</option>
+                    <option value="Kanukunta">Kanukunta</option>
+                    <option value="Karmanghat Bus Stop">Karmanghat Bus Stop</option>
+                    <option value="Karmika Nagar">Karmika Nagar</option>
+                    <option value="Kavvadipally">Kavvadipally</option>
+                    <option value="Kazipally">Kazipally</option>
+                    <option value="Keesara guta">Keesara guta</option>
+                    <option value="Kesav Giri">Kesav Giri</option>
+                    <option value="Kismatpura">Kismatpura</option>
+                    <option value="Kondapur Bus Stop">Kondapur Bus Stop</option>
+                    <option value="Kongara Kalan">Kongara Kalan</option>
+                    <option value="Koti Bus Stop">Koti Bus Stop</option>
+                    <option value="Kotla Ali Jah">Kotla Ali Jah</option>
+                    <option value="Kukatpally Bus Stop">Kukatpally Bus Stop</option>
+                    <option value="Kushaiguda">Kushaiguda</option>
+                    <option value="LB Nagar Bus Stop">LB Nagar Bus Stop</option>
+                    <option value="Lab Quarters Main Bus Stop">Lab Quarters Main Bus Stop</option>
+                    <option value="Lakdikapool Bus Stop">Lakdikapool Bus Stop</option>
+                    <option value="Lal Bazar Bus Stop">Lal Bazar Bus Stop</option>
+                    <option value="Lalaguda Bus Stop">Lalaguda Bus Stop</option>
+                    <option value="Laxmapur">Laxmapur</option>
+                    <option value="Laxmiguda">Laxmiguda</option>
+                    <option value="Lingampally Bus Stop">Lingampally Bus Stop</option>
+                    <option value="M M kunta">M M kunta</option>
+                    <option value="MB Darga">MB Darga</option>
+                    <option value="MGBS Bus Stop">MGBS Bus Stop</option>
+                    <option value="Madhuban colony">Madhuban colony</option>
+                    <option value="Maruthi Nagar(Kothapet)">Maruthi Nagar(Kothapet)</option>
+                    <option value="Medchal">Medchal</option>
+                    <option value="Mehdipatnam Bus Stop">Mehdipatnam Bus Stop</option>
+                    <option value="Miyapur X Roads">Miyapur X Roads</option>
+                    <option value="Moti Darwaza">Moti Darwaza</option>
+                    <option value="Moula Ali">Moula Ali</option>
+                    <option value="NFC(ECIL)">NFC(ECIL)</option>
+                    <option value="NGOs Colony Bus Stop">NGOs Colony Bus Stop</option>
+                    <option value="NTR Nagar(L B Nagar)">NTR Nagar(L B Nagar)</option>
+                    <option value="Nadargul">Nadargul</option>
+                    <option value="Nagarjuna Sagar Road">Nagarjuna Sagar Road</option>
+                    <option value="Nagole Bus Stop">Nagole Bus Stop</option>
+                    <option value="Nampally">Nampally</option>
+                    <option value="Nanakramguda">Nanakramguda</option>
+                    <option value="Narsapur">Narsapur</option>
+                    <option value="Narsingi Bus Stop">Narsingi Bus Stop</option>
+                    <option value="Neredmet X Road Bus Stop">Neredmet X Road Bus Stop</option>
+                    <option value="New Gayathri Nagar Colony Bus Stop">New Gayathri Nagar Colony Bus Stop</option>
+                    <option value="New Maruthi Nagar">New Maruthi Nagar</option>
+                    <option value="Nutankal">Nutankal</option>
+                    <option value="Old Bowenpally Bus Stop">Old Bowenpally Bus Stop</option>
+                    <option value="Osman sagar Road">Osman sagar Road</option>
+                    <option value="Pahadi Shareef">Pahadi Shareef</option>
+                    <option value="Panyal/Konyal">Panyal/Konyal</option>
+                    <option value="Patancheru Bus Stop">Patancheru Bus Stop</option>
+                    <option value="Patel Nagar(Amberpet)">Patel Nagar(Amberpet)</option>
+                    <option value="Patelguda">Patelguda</option>
+                    <option value="Peddamma Gudi">Peddamma Gudi</option>
+                    <option value="Pocharam Village Main Rd">Pocharam Village Main Rd</option>
+                    <option value="Pragathi Nagar Bus Stop">Pragathi Nagar Bus Stop</option>
+                    <option value="Prajay Sai Gardens">Prajay Sai Gardens</option>
+                    <option value="Prasanth Nagar(Moula Ali)">Prasanth Nagar(Moula Ali)</option>
+                    <option value="Pudur">Pudur</option>
+                    <option value="Puppalaguda">Puppalaguda</option>
+                    <option value="RN Reddy Colony">RN Reddy Colony</option>
+                    <option value="RTC Colony(Moula ali)">RTC Colony(Moula ali)</option>
+                    <option value="Railapur">Railapur</option>
+                    <option value="Rajeev Nagar">Rajeev Nagar</option>
+                    <option value="Rajendra Nagar Bus Depot Bus Stop">Rajendra Nagar Bus Depot Bus Stop</option>
+                    <option value="Rajiv Gruhakalpa Colony">Rajiv Gruhakalpa Colony</option>
+                    <option value="Ram Nagar">Ram Nagar</option>
+                    <option value="Ramdaspally">Ramdaspally</option>
+                    <option value="Ranigunj Bus Stop">Ranigunj Bus Stop</option>
+                    <option value="Risala Bazar">Risala Bazar</option>
+                    <option value="SBI Colony(Kothapet)">SBI Colony(Kothapet)</option>
+                    <option value="Safilguda Bus Stop">Safilguda Bus Stop</option>
+                    <option value="Sahara Bus Stop">Sahara Bus Stop</option>
+                    <option value="Saheb Nagar(Vanasthalipuram)">Saheb Nagar(Vanasthalipuram)</option>
+                    <option value="Sai Nagar(Bala Nagar)">Sai Nagar(Bala Nagar)</option>
+                    <option value="Saibaba Nagar(Jeedimetla)">Saibaba Nagar(Jeedimetla)</option>
+                    <option value="Saidabad Bus Stop">Saidabad Bus Stop</option>
+                    <option value="Sanath Nagar Bus Stop">Sanath Nagar Bus Stop</option>
+                    <option value="Sanikpuri Bus Stop">Sanikpuri Bus Stop</option>
+                    <option value="Saroor Nagar Bus Terminal">Saroor Nagar Bus Terminal</option>
+                    <option value="Secunderabad Junction">Secunderabad Junction</option>
+                    <option value="Shah ali banda New Bus Stop">Shah ali banda New Bus Stop</option>
+                    <option value="Shaikpet Darga Bus Stop">Shaikpet Darga Bus Stop</option>
+                    <option value="Shamshabad Bus Stop">Shamshabad Bus Stop</option>
+                    <option value="Snehapuri Colony Bus Stop">Snehapuri Colony Bus Stop</option>
+                    <option value="South End Park">South End Park</option>
+                    <option value="Sri Ram Nagar(Chintal)">Sri Ram Nagar(Chintal)</option>
+                    <option value="Srinivas Nagar Bus Stop">Srinivas Nagar Bus Stop</option>
+                    <option value="Sripuram Colony Stop">Sripuram Colony Stop</option>
+                    <option value="Subhash Nagar(Jeedimetla)">Subhash Nagar(Jeedimetla)</option>
+                    <option value="Suchitra Bus Stop">Suchitra Bus Stop</option>
+                    <option value="Suraram">Suraram</option>
+                    <option value="Syed Nagar">Syed Nagar</option>
+                    <option value="Tallagada">Tallagada</option>
+                    <option value="Telephone Colony(Kothapet)">Telephone Colony(Kothapet)</option>
+                    <option value="Timmapally Bus Stop">Timmapally Bus Stop</option>
+                    <option value="Tolichowki Bus Stop">Tolichowki Bus Stop</option>
+                    <option value="Uppal Bus Stop">Uppal Bus Stop</option>
+                    <option value="Uppal Depot">Uppal Depot</option>
+                    <option value="Uppal X Road Bus Stop">Uppal X Road Bus Stop</option>
+                    <option value="Upparpally X Road">Upparpally X Road</option>
+                    <option value="Upperguda">Upperguda</option>
+                    <option value="Uppuguda">Uppuguda</option>
+                    <option value="V.V.Nagar bustop">V.V.Nagar bustop</option>
+                    <option value="VBIT(Ascendas IT Park)">VBIT(Ascendas IT Park)</option>
+                    <option value="VST Bus Stop">VST Bus Stop</option>
+                    <option value="Vampuguda">Vampuguda</option>
+                    <option value="Vanasthalipuram">Vanasthalipuram</option>
+                    <option value="Venkata Reddy Nagar Bus Stop">Venkata Reddy Nagar Bus Stop</option>
+                    <option value="Venkatapuram Last Bus Stop">Venkatapuram Last Bus Stop</option>
+                    <option value="Vijaya Hospital">Vijaya Hospital</option>
+                    <option value="Vivek Nagar">Vivek Nagar</option>
+                    <option value="Womens college Bus Stop">Womens college Bus Stop</option>
+                    <option value="Yacharam(Nagarjuna Sagar Road)">Yacharam(Nagarjuna Sagar Road)</option>
+                    <option value="Yamjal">Yamjal</option>
+                    <option value="Yapral Bus Stop">Yapral Bus Stop</option>
+                    <option value="Yousufguda basti Bus Stop">Yousufguda basti Bus Stop</option>
+                    <option value="Ziaguda">Ziaguda</option>
+                    <option value="Zoo Park">Zoo Park</option>
+                 </select>
+            </div>
+
             <div class="btn-group">
                 <button id="date_today" class="date-button" onclick="setDashboardDate('dttoday','date_today')"><span>Today</span></button>
                 <button id="date_thisweek" class="date-button" onclick="setDashboardDate('dtthisweek','date_thisweek')"><span>Past 7 Days</span></button>
                 <button id="date_thismonth" class="date-button" onclick="setDashboardDate('dtthismonth','date_thismonth')"><span>Past 30 days</span></button>
                 <button id="date_custom" class="date-button" onclick="setDashboardDate('dtcustomdates','date_custom')"><span>Custom Date Range</span></button>
                 <div id="custom-dates" class="custom-dates-container" style="display: none">
-                    <div class="date-labels"><Span>Start Date: </Span>
+                    <div class="date-labels"><Span>Showing data between Start Date: </Span>
                       <Span>End Date: </Span>
                     </div>
                     <div class="start-end-dates">
@@ -505,15 +666,24 @@ function handleTableQueryResponse(response) {
             </div>
 
       </div>
+
+      <div class="selected-date-label"><Span id="selected-start-label-id" class="label-selected-start-date">Start Date: </Span>
+          <Span>.  and  .</Span>
+          <Span id="selected-end-label-id" class="label-selected-end-date">End Date: </Span>
+        </div>
+
         <div class="dashboard-container">
             <div class="data-side-bar"></div>
             
         <div class = "data-container">
         <div class="highlights-container">
-                  <div class="summary-card">
-                    <div id="total_in_service_div">
-                      <p id="routes_in_service_title">ROUTES IN SERVICE<br><br>
-                        <span id="routes_in_service" class="summary_metric">calculating...</span></p>
+                  <div class="summary-card" style="--summarybgcolor: rgb(255, 0, 200); --summarytextcolor: white">
+                      <img src="TSRTC_LOGO.png" width="60%" height="100%"/>
+                  </div>
+                  <div class="summary-card" style="--summarybgcolor: rgb(185, 44, 86); --summarytextcolor: white">
+                    <div id="most_crowded_stop_div">
+                      <p id="most_crowded_stop_title">MOST CROWDED STOP<br><br>
+                        <span id="most_crowded_stop" class="summary_metric">calculating...</span></p>
                     </div>
                   </div>
                   <div class="summary-card" style="--summarybgcolor: rgb(3, 88, 109); --summarytextcolor: white">
@@ -522,35 +692,50 @@ function handleTableQueryResponse(response) {
                         <span id="total_passengers" class="summary_metric">calculating...</span></p>
                     </div>
                   </div>
-                  <div class="summary-card" style="--summarybgcolor: greenyellow; --summarytextcolor: black">
-                    <div id="most_revenue_route_div">
-                      <p id="most_revenue_route_title">MOST REVENUE ROUTE<br><br>
-                        <span id="most_revenue_route" class="summary_metric">calculating...</span></p><br><br>
+                  <div class="summary-card" style="--summarybgcolor: rgb(124, 30, 93); --summarytextcolor: white">
+                      <img class="chart-text" src="TSRTC_bus_stop.jpeg" height=100% width=100%/>
+                    </div>
+                        <div class="summary-card" style="--summarybgcolor: greenyellow; --summarytextcolor: black">
+                    <div id="most_boarded_stop_div">
+                      <p id="most_boarded_stop_title">MOST BOARDED STOP<br><br>
+                        <span id="most_boarded_stop" class="summary_metric">calculating...</span></p><br><br>
                     </div>
                   </div>
                   <div class="summary-card" style="--summarybgcolor: rgb(124, 30, 93); --summarytextcolor: white">
-                      <div id="most_busy_route_div">
-                        <p id="most_busy_route_title">MOST BUSY ROUTE<br><br>
-                          <span id="most_busy_route" class="summary_metric">calculating...</span></p><br><br>
+                      <div id="most_alighted_stop_div">
+                        <p id="most_alighted_stop_title">MOST ALIGHTED STOP<br><br>
+                          <span id="most_alighted_stop" class="summary_metric">calculating...</span></p><br><br>
                       </div>
-                  </div>
-                  <div class="summary-card" style="--summarybgcolor: rgb(185, 44, 86); --summarytextcolor: white">
-                    <div id="most_crowded_stop_div">
-                      <p id="most_crowded_stop_title">MOST CROWDED STOP<br><br>
-                        <span id="most_crowded_stop" class="summary_metric">calculating...</span></p>
-                    </div>
                   </div>
             </div>
             <div class="charts-container">
                 <div class="charts-row">
                   <div class="charts-card">
-                  <div class="chart-render" id="scatter_chart_div"></div>
-                  <p class="chart-text" id="chart-text-id">Top 10 Routes that have carried the most number of passengers in one day, are shown in this scatter chart.</p>
+                  <div class="chart-render" id="dashboard_welcome_div">
+                    <p id="chart-text-id">
+                      <H1>Welcome to operational metrics dashboard!</H1>
+                      <H4>This dashboard summarizes metrics at city level, or individual stop level of Hyderabad city buses of TSRTC.</H4>
+                      <p>This dashboard consists of the below pages:</p>
+                          <ol>
+                            <li><H4>BUS STOP: <span>In this page two levels of data filters available.</span></H4></li>
+                                <ul>
+                                  <li>Stop selection = "ALL" or a value from drop-down. Initial view shows data from all stops.</li><br>
+                                  <li>Date Range selection = Today, Past Week, Past Month, or Custom Date Range. Initial view shows data from previous day.</li>
+                                </ul><br>
+                            <li>Please also use the top navigation bar to view data at 
+                              <span style="font-weight:bold">HOME</span>, or 
+                              <span style="font-weight:bold">ROUTE</span> level. Tabular view on the data can also be viewed on 
+                              <span style="font-weight:bold">RAWDATA</span> page.</li>
+                          </ol>
+                
+                    </p>
                   </div>
-                  <div class="charts-card">
+                </div>
+                  <!-- <div class="charts-card">
                   <div class="chart-render" id="bar_chart_div"></div>
                   <p class="chart-text" id="chart-text-id">Top 10 Routes that have carried the most number of passengers in one day, are shown in this scatter chart.</p>
-                </div>
+                  <p class="chart-text" id="chart-text-id">This dashboard summarizes the view of TSRTC at bus depot level</p>
+                 </div> -->
                 </div>
                 <div class="charts-row">
                   <div class="charts-card">
@@ -570,34 +755,20 @@ function handleTableQueryResponse(response) {
       </div>
   
   <div class="footer-container">
-      <p id="footer_tab">1</p>
+      <p id="footer_tab">powered by <a href="https://blue-ravine.com" target="_blank">Blue Ravine Technologies.</a></p>
   </div>
 </div>
 <script>
-    var accord = document.getElementsByClassName('accordion');
-     var k;
 
-     for (k = 0; k < accord.length; k++) {
-       accord[k].addEventListener("click", function() {
-         this.classList.toggle("active");
-         var panel = this.nextElementSibling;
+  function openNav() {
+    document.getElementById("mySidenav").style.width = "250px";
+    document.getElementById("main-container-id").style.marginLeft = "250px";
+}
 
-         if (panel.style.display === "block") {
-            panel.style.display = "none";
-        } else {
-            panel.style.display = "block";
-        }
-       });
-     }
-
-  function toggle_visibility(id) {
-      var e = document.getElementById(id);
-      if(e.style.display == 'flex') {
-         e.style.display = 'none';
-      } else {
-         e.style.display = 'flex';
-      }
-  }
+function closeNav() {
+    document.getElementById("mySidenav").style.width = "0";
+    document.getElementById("main-container-id").style.marginLeft = "0";
+}
 
    </script>
 </body>
