@@ -203,12 +203,12 @@
         var crowdedstopquery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=StopView&headers=1', opts);
 
         (stop && (stop !== 'ALL'))
-                                ? (startDate ? (endDate ? (`select A, SUM(C) where A = '${stop}' and B >= date '${startDate}' and B <= date '${endDate}' group by A order by SUM(C) desc limit 1`)
-                                                        : (`select A, SUM(C) where A = '${stop}' and B >= date '${startDate}' group by A order by SUM(C) desc limit 1`))
-                                             : (`select A, SUM(C) where A = '${stop}' group by A order by SUM(C) desc limit 1`))
-                                : (startDate ? (endDate ? (`select A, SUM(C) where B >= date '${startDate}' and B <= date '${endDate}' group by A order by SUM(C) desc limit 1`)
-                                                        : (`select A, SUM(C) where B >= date '${startDate}' group by A order by SUM(C) desc limit 1`))
-                                             : ('select A, SUM(C) group by A order by SUM(C) desc limit 1'));
+                                ? (startDate ? (endDate ? crowdedstopquery.setQuery(`select A, SUM(C) where A = '${stop}' and B >= date '${startDate}' and B <= date '${endDate}' group by A order by SUM(C) desc`)
+                                                        : crowdedstopquery.setQuery(`select A, SUM(C) where A = '${stop}' and B >= date '${startDate}' group by A order by SUM(C) desc`))
+                                             : crowdedstopquery.setQuery(`select A, SUM(C) where A = '${stop}' group by A order by SUM(C) desc`))
+                                : (startDate ? (endDate ? crowdedstopquery.setQuery(`select A, SUM(C) where B >= date '${startDate}' and B <= date '${endDate}' group by A order by SUM(C) desc`)
+                                                        : crowdedstopquery.setQuery(`select A, SUM(C) where B >= date '${startDate}' group by A order by SUM(C) desc`))
+                                             : crowdedstopquery.setQuery('select A, SUM(C) group by A order by SUM(C) desc'));
 
         // Send the query with a callback function.
         crowdedstopquery.send(handleCrowdedStopQueryResponse);
@@ -244,12 +244,12 @@
         var revenueroutequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=StopView&headers=1', opts);
 
         (stop && (stop !== 'ALL'))
-                ? (startDate ? (endDate ? revenueroutequery.setQuery(`select A, MAX(E) where F = '${stop}' and B >= date '${startDate}' and B <= date '${endDate}' group by A order by MAX(E) desc`)
-                             : revenueroutequery.setQuery(`select A, MAX(E) where F = '${stop}' and B >= date '${startDate}' group by A order by MAX(E) desc`))
-                      : revenueroutequery.setQuery(`select A, MAX(E) where F = '${stop}' group by A order by MAX(E) desc`))
-                : (startDate ? (endDate ? revenueroutequery.setQuery(`select A, MAX(E) where B >= date '${startDate}' and B <= date '${endDate}' group by A order by MAX(E) desc`)
-                             : revenueroutequery.setQuery(`select A, MAX(E) where B >= date '${startDate}' group by A order by MAX(E) desc`))
-                     : revenueroutequery.setQuery('select A, MAX(E) group by A order by MAX(E) desc'));
+                ? (startDate ? (endDate ? revenueroutequery.setQuery(`select A, MAX(E) where F = '${stop}' and B >= date '${startDate}' and B <= date '${endDate}' group by A order by MAX(E) desc limit 1`)
+                             : revenueroutequery.setQuery(`select A, MAX(E) where F = '${stop}' and B >= date '${startDate}' group by A order by MAX(E) desc limit 1`))
+                      : revenueroutequery.setQuery(`select A, MAX(E) where F = '${stop}' group by A order by MAX(E) desc limit 1`))
+                : (startDate ? (endDate ? revenueroutequery.setQuery(`select A, MAX(E) where B >= date '${startDate}' and B <= date '${endDate}' group by A order by MAX(E) desc limit 1`)
+                             : revenueroutequery.setQuery(`select A, MAX(E) where B >= date '${startDate}' group by A order by MAX(E) desc limit 1`))
+                     : revenueroutequery.setQuery('select A, MAX(E) group by A order by MAX(E) desc limit 1'));
 
         // Send the query with a callback function.
         revenueroutequery.send(handleRevenueRouteQueryResponse);
@@ -386,9 +386,15 @@
 
           var crowdedstopdata = response.getDataTable();
 
+          // var crowdedstopresult = google.visualization.data.group(
+          //   crowdedstopdata,
+          //   [0],
+          //   [{'column': 2, 'aggregation': google.visualization.data.max, 'type': 'number'}]
+          // );
+
           try {
             document.getElementById('most_crowded_stop').innerHTML = crowdedstopdata.getValue(0,0)
-            + '<br><span style="font-size:1vw"}>(# passengers: ' + numberWithCommas(crowdedstopdata.getValue(0,2)) + ')</span>';
+            + '<br><span style="font-size:1vw"}>(# passengers: ' + numberWithCommas(crowdedstopdata.getValue(0,1)) + ')</span>';
           }
           catch(err) {
             switch (err.message) {
