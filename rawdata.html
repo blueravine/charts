@@ -1,161 +1,189 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="rawdata.css"/>
+      <!--Load the AJAX API-->
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script>
+      var dashboardDate;
+      var prevbutton = 'date_today';
 
+      var selectedRange = new Date();
+      var startDateString = '';
+      var endDateString = '';
+      var selectedrouteString = 'ALL';
+      var selectedStopString = 'ALL';
 
-    <html>
-    <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <!--Load the AJAX API-->
-        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-            <script>
-        var dashboardDate;
-        var prevbutton = 'date_today';
-        // alert (`select COUNT(A) where D = date '${dashboardDate}'`);
+      selectedRange.setDate(selectedRange.getDate() - 1);
+      endDateString = selectedRange.toISOString().slice(0,10);
+      startDateString = selectedRange.toISOString().slice(0,10);
 
-        let initialRange = new Date();
-        let initialStartDateString = '';
-        let initialEndDateString = '';
+      selectedRange = new Date();
 
-        initialRange.setDate(initialRange.getDate() - 1);
-        initialEndDateString = initialRange.toISOString().slice(0,10);
-        initialStartDateString = initialRange.toISOString().slice(0,10);
+      function setDashboardDate(dateRange, div_id) {
 
-        function setDashboardDate(dateRange, div_id) {
-            // alert(dateRange);
+        document.getElementById(prevbutton).style.backgroundColor = 'white';
+        document.getElementById(prevbutton).style.color = 'black';
 
-            document.getElementById(prevbutton).style.backgroundColor = 'white';
-            document.getElementById(prevbutton).style.color = 'black';
+        prevbutton = div_id;
 
-            prevbutton = div_id;
+        document.getElementById(div_id).style.backgroundColor = '#2eacde';
+        document.getElementById(div_id).style.color = 'white';
 
-            document.getElementById(div_id).style.backgroundColor = '#2eacde';
-            document.getElementById(div_id).style.color = 'white';
+        // let selectedRange = new Date();
+        // let startDateString = '';
+        // let endDateString = '';
 
-            let selectedRange = new Date();
-            let startDateString = '';
-            let endDateString = '';
+        switch(dateRange) {
+          case 'dttoday':
+                startDateString = selectedRange.toISOString().slice(0,10);
+                endDateString = selectedRange.toISOString().slice(0,10);
+                hideCustomDates();
+                break;
+          case 'dtthisweek':
+                endDateString = selectedRange.toISOString().slice(0,10);
+                selectedRange.setDate(selectedRange.getDate() - 7);
+                startDateString = selectedRange.toISOString().slice(0,10);
+                hideCustomDates();
+                break;
+          case 'dtthismonth':
+                endDateString = selectedRange.toISOString().slice(0,10);
+                selectedRange.setDate(selectedRange.getDate() - 30);
+                startDateString = selectedRange.toISOString().slice(0,10);
+                hideCustomDates();
+                break;
+          case 'dtcustomdates':
+                showCustomDates();
+                break;
+          default:
+        }
+        
+        // document.getElementById('selected_date_range').innerHTML = 'Data since "' + startDateString + '" until "' + endDateString + '"';
+        document.getElementById('selected-start-label-id').innerHTML = 'Showing data between Start Date: ' + startDateString;
+        document.getElementById('selected-end-label-id').innerHTML = 'End Date: ' + endDateString;
+        
+        google.charts.setOnLoadCallback(initialize(startDateString, endDateString, selectedrouteString,  selectedStopString));
+      }
 
-            switch(dateRange) {
-            case 'dttoday':
-                    startDateString = selectedRange.toISOString().slice(0,10);
-                    endDateString = selectedRange.toISOString().slice(0,10);
-                    hideCustomDates();
-                    break;
-            case 'dtthisweek':
-                    endDateString = selectedRange.toISOString().slice(0,10);
-                    selectedRange.setDate(selectedRange.getDate() - 7);
-                    startDateString = selectedRange.toISOString().slice(0,10);
-                    hideCustomDates();
-                    break;
-            case 'dtthismonth':
-                    endDateString = selectedRange.toISOString().slice(0,10);
-                    selectedRange.setDate(selectedRange.getDate() - 30);
-                    startDateString = selectedRange.toISOString().slice(0,10);
-                    hideCustomDates();
-                    break;
-            case 'dtcustomdates':
-                    showCustomDates();
-                    break;
-            default:
+      function showCustomDates() {
+        var x = document.getElementById("custom-dates");
+        x.style.display = "flex";
+        watchDateChange();
+      }
+
+      function hideCustomDates() {
+        var x = document.getElementById("custom-dates");
+        x.style.display = "none";
+
+        document.getElementById('message_for_custom_date').innerHTML = '.';
+
+        stopWatchingDateChange();
+      }
+
+      function watchDateChange() {
+        document.getElementById("filter_start_date").addEventListener("change", dateListener);
+
+        document.getElementById("filter_end_date").addEventListener("change", dateListener);
+      }
+
+      function dateListener() {
+            var input = this.value;
+            var dateEntered = new Date(input);
+
+            if(input){
+              document.getElementById('message_for_custom_date').innerHTML = '.';
             }
-            
-            // let dateString = selectedRange.toISOString().slice(0,10);
-            // alert('values to be shown > ' + dateString);
-            document.getElementById('selected_date_range').innerHTML = 'Data since "' + startDateString + '" until "' + endDateString + '"';
-            google.charts.setOnLoadCallback(initialize(startDateString, endDateString));
+      }     
+
+      function stopWatchingDateChange() {
+        document.getElementById("filter_start_date").removeEventListener("change", dateListener);
+
+        document.getElementById("filter_end_date").removeEventListener("change", dateListener);
+      }
+
+      function customDateSubmitted() {
+        var filterStartDate = document.getElementById("filter_start_date").value;
+        var filterEndDate = document.getElementById("filter_end_date").value;
+
+        if (!(filterStartDate) || !(filterEndDate)) {
+            document.getElementById('message_for_custom_date').innerHTML = "Please select Start and End dates!";
+        } 
+        else {
+          // document.getElementById('selected_date_range').innerHTML = 'Data since "' + filterStartDate + '" until "' + filterEndDate + '"';
+          document.getElementById('selected-start-label-id').innerHTML = 'Showing data between Start Date: ' + filterStartDate;
+          document.getElementById('selected-end-label-id').innerHTML = 'End Date: ' + filterEndDate;
+
+        google.charts.setOnLoadCallback(initialize(filterStartDate, filterEndDate, selectedrouteString, selectedStopString));        
         }
+      }    
 
-        function showCustomDates() {
-            var x = document.getElementById("custom-dates");
-            x.style.display = "flex";
-            watchDateChange();
-        }
+      // Load the Visualization API and the corechart package.
+      google.charts.load('current', {'packages':['corechart','table']});
+    //   google.charts.load('current'); //change to load chartwrapper instead of charts
 
-        function hideCustomDates() {
-            var x = document.getElementById("custom-dates");
-            x.style.display = "none";
+      // Set a callback to run when the Google Visualization API is loaded.
+      google.charts.setOnLoadCallback(initialLoad);
 
-            document.getElementById('message_for_custom_date').innerHTML = '.';
+      function initialLoad() {
+        // document.getElementById('selected_date_range').innerHTML = 'Data since "' + initialStartDateString + '" until "' + initialEndDateString + '"';
+        document.getElementById('selected-start-label-id').innerHTML = 'Showing data between Start Date: ' + startDateString;
+        document.getElementById('selected-end-label-id').innerHTML = 'End Date: ' + endDateString;
 
-            stopWatchingDateChange();
-        }
+        initialize(startDateString, endDateString, selectedrouteString, selectedStopString);
+      }
 
-        function watchDateChange() {
-            document.getElementById("filter_start_date").addEventListener("change", dateListener);
+      function initialize(startDate, endDate, route, stop) {
 
-            document.getElementById("filter_end_date").addEventListener("change", dateListener);
-        }
-
-        function dateListener() {
-                var input = this.value;
-                var dateEntered = new Date(input);
-                // alert(input); //e.g. 2015-11-13
-                // alert(dateEntered); //e.g. Fri Nov 13 2015 00:00:00 GMT+0000 (GMT Standard Time)
-
-                if(input){
-                document.getElementById('message_for_custom_date').innerHTML = '.';
-                }
-        }     
-
-        function stopWatchingDateChange() {
-            document.getElementById("filter_start_date").removeEventListener("change", dateListener);
-
-            document.getElementById("filter_end_date").removeEventListener("change", dateListener);
-        }
-
-        function customDateSubmitted() {
-            var filterStartDate = document.getElementById("filter_start_date").value;
-            var filterEndDate = document.getElementById("filter_end_date").value;
-
-            if (!(filterStartDate) || !(filterEndDate)) {
-                document.getElementById('message_for_custom_date').innerHTML = "Please select Start and End dates!";
-            } 
-            else {
-            document.getElementById('selected_date_range').innerHTML = 'Data since "' + filterStartDate + '" until "' + filterEndDate + '"';
-            google.charts.setOnLoadCallback(initialize(filterStartDate, filterEndDate));        
-            }
-        }    
-
-        // Load the Visualization API and the corechart package.
-        google.charts.load('current', {'packages':['corechart','table']});
-
-        // document.getElementById("custom-dates").style.display = "none";
-
-        // Set a callback to run when the Google Visualization API is loaded.
-        google.charts.setOnLoadCallback(initialLoad);
-
-        function initialLoad() {
-            document.getElementById('selected_date_range').innerHTML = 'Data since "' + initialStartDateString + '" until "' + initialEndDateString + '"';
-            initialize(initialStartDateString, initialEndDateString);
-        }
-
-        function initialize(startDate, endDate) {
             var opts = {sendMethod: 'auto'};
             // Replace the data source URL on next line with your data source URL.
             var tablequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView&headers=1', opts);
 
             // startDate ? tablequery.setQuery(`select A,B,C,D,E where D > date '${startDate}'`): tablequery.setQuery('select A,B,C,D,E');
-            startDate ? (endDate ? (tablequery.setQuery(`select A,B,C,D,E,F where B >= date '${startDate}' and B <= date '${endDate}'`))
+            (route && (route !== 'ALL'))
+                ? (startDate ? (endDate ? (tablequery.setQuery(`select A,B,C,D,E,F where A= '${route}' and B >= date '${startDate}' and B <= date '${endDate}'`))
+                                : tablequery.setQuery(`select A,B,C,D,E,F where A= '${route}' and  B >= date '${startDate}'`))
+                    : tablequery.setQuery(`select A,B,C,D,E,F where A= '${route}'`))
+                : (startDate ? (endDate ? (tablequery.setQuery(`select A,B,C,D,E,F where B >= date '${startDate}' and B <= date '${endDate}'`))
                                 : tablequery.setQuery(`select A,B,C,D,E,F where B >= date '${startDate}'`))
-                    : tablequery.setQuery('select A,B,C,D,E,F');
+                    : tablequery.setQuery('select A,B,C,D,E,F'));
             //tablequery.setQuery('select A,B,C,D,E');
 
             // Send the query with a callback function.
-            tablequery.send(handleTableQueryResponse);
+            tablequery.send(handleRouteTableQueryResponse);
+
+
+            var opts = {sendMethod: 'auto'};
+            // Replace the data source URL on next line with your data source URL.
+            var stoptablequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=StopView&headers=1', opts);
+
+            // startDate ? tablequery.setQuery(`select A,B,C,D,E where D > date '${startDate}'`): tablequery.setQuery('select A,B,C,D,E');
+            (stop && (stop !== 'ALL'))
+                    ? (startDate ? (endDate ? (stoptablequery.setQuery(`select A,B,C,D,E where A= '${stop}' and B >= date '${startDate}' and B <= date '${endDate}'`))
+                                : stoptablequery.setQuery(`select A,B,C,D,E where A= '${stop}' and B >= date '${startDate}'`))
+                        : stoptablequery.setQuery(`select A,B,C,D,E where A= '${stop}'`))
+                    : (startDate ? (endDate ? (stoptablequery.setQuery(`select A,B,C,D,E where B >= date '${startDate}' and B <= date '${endDate}'`))
+                                : stoptablequery.setQuery(`select A,B,C,D,E where B >= date '${startDate}'`))
+                        : stoptablequery.setQuery('select A,B,C,D,E'));
+            //tablequery.setQuery('select A,B,C,D,E');
+
+            // Send the query with a callback function.
+            stoptablequery.send(handleStopTableQueryResponse);
+
 
         }
 
-        function numberWithCommas(x) {
-            x=x.toString();
-            var lastThree = x.substring(x.length-3);
-            var otherNumbers = x.substring(0,x.length-3);
-            if(otherNumbers != '')
-                lastThree = ',' + lastThree;
-            var res = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + lastThree;
-            // let modx = x.toString().replace(/\B(?=(\d{3})+(?!\d))/, ",");
-            // let modx = x.toString().replace(/(\d{3})$/, ",");
-            return res;
-        }
+      function numberWithCommas(x) {
+        x=x.toString();
+        var lastThree = x.substring(x.length-3);
+        var otherNumbers = x.substring(0,x.length-3);
+        if(otherNumbers != '')
+            lastThree = ',' + lastThree;
+        var res = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + lastThree;
+        return res;
+      }
 
-    function handleTableQueryResponse(response) {
+    function handleRouteTableQueryResponse(response) {
             if (response.isError()) {
             alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
             return;
@@ -173,92 +201,1411 @@
                 'justify': 'center',
             };
 
-            var table_options = {'title':'Bus Utilization',
-                        //  'width':1240,
-                        //  'height':220,
+            var route_table_options = {'title':'Bus Utilization',
+                            'width':840,
+                            'height':340,
                             'cssClassNames': cssClassNames,
                             'showRowNumber': true,
                             'allowHtml': true,
                             };
 
-            var tabledata = response.getDataTable();
+            var routetabledata = response.getDataTable();
 
-            var table = new google.visualization.Table(document.getElementById('table_div'));
+            var routetable = new google.visualization.Table(document.getElementById('route_table_div'));
 
-            table.draw(tabledata, table_options);
+            routetable.draw(routetabledata, route_table_options);
         }
 
-    </script>
-    <link rel="stylesheet" type="text/css" href="rawdata.css"/>
-    </head>
+    function handleStopTableQueryResponse(response) {
+            if (response.isError()) {
+            alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
+            return;
+            }
 
-    <body>
-        <!--Div that will hold the pie chart-->
-    <div class="main-container">
-        <div class="navbar">
-            <a href="googlecharts.html">HOME</a>
-            <a href="#">STOP</a>
-            <a href="#">ROUTE</a>
-            <a href="#">RAWDATA</a>
+            var cssClassNames = {
+                'headerRow': 'italic-darkblue-font large-font bold-font',
+                'tableRow': '',
+                'oddTableRow': 'beige-background',
+                'selectedTableRow': 'orange-background large-font bold-font',
+                'hoverTableRow': '',
+                'headerCell': 'gold-border',
+                'tableCell': 'center-text',
+                'rowNumberCell': 'italic-purple-font',
+                'justify': 'center',
+            };
+
+            var stop_table_options = {'title':'Bus Utilization',
+                            'width':840,
+                            'height':340,
+                            'cssClassNames': cssClassNames,
+                            'showRowNumber': true,
+                            'allowHtml': true,
+                            };
+
+            var stoptabledata = response.getDataTable();
+
+            var stoptable = new google.visualization.Table(document.getElementById('stop_table_div'));
+
+            stoptable.draw(stoptabledata, stop_table_options);
+        }
+
+
+      function routeSelection() {
+          selectedrouteString = document.getElementById("filter_route_id").value;
+          initialize(startDateString, endDateString, selectedrouteString, selectedStopString);
+      }
+
+      
+      function stopSelection() {
+          selectedStopString = document.getElementById("filter_stop_id").value;
+          initialize(startDateString, endDateString, selectedrouteString, selectedStopString);
+      }
+
+
+
+</script>
+  </head>
+
+  <body>
+    <!--Div that will hold the pie chart-->
+    <!-- <div id="mySidenav" class="sidenav">
+      <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+      <a href="#">Services</a>
+      <a href="#">Clients</a>
+      <a href="#">Contact</a>
+    </div>
+    
+    <span style="font-size:30px;cursor:pointer" onclick="openNav()">&#9776;</span> -->
+
+<div class="main-container" id="main-container-id">
+      <div class="navbar">
+          <a href="googlecharts.html"><i class="fa fa-home"></i>   HOME</a>
+          <a href="routeview.html"><i class="fas fa-route"></i>   ROUTE</a>
+          <a href="stopview.html"><i class="fas fa-map-pin"></i>   BUS STOP</a>
+          <a href="rawdata.html" class="active-page"><i class="fas fa-table"></i>   RAWDATA</a>
+        </div>
+      <div class="header-container" id="header-continer-id">
+            <div class="stops_list"><Span class="stop-label">Stop: </Span>
+
+                <select id="filter_stop_id" class="filter_stop" onchange="stopSelection()">
+                      <option value="ALL" selected="selected">ALL</option>
+                      <option value="A G Colony">A G Colony</option>
+                      <option value="A.S.Rao Nagar Bus Stop">A.S.Rao Nagar Bus Stop</option>
+                      <option value="Acharya N G Ranga Agricultural University">Acharya N G Ranga Agricultural University</option>
+                      <option value="Afzalgunj Bus Stop">Afzalgunj Bus Stop</option>
+                      <option value="Ahmed Nagar">Ahmed Nagar</option>
+                      <option value="Air Force Academy(Dundigal)">Air Force Academy(Dundigal)</option>
+                      <option value="Alkapuri Bus Stop">Alkapuri Bus Stop</option>
+                      <option value="Allwyn Colony Bus Stop">Allwyn Colony Bus Stop</option>
+                      <option value="Almasguda Bus Stop">Almasguda Bus Stop</option>
+                      <option value="Ambedkar Nagar(Chinthal Basthi)">Ambedkar Nagar(Chinthal Basthi)</option>
+                      <option value="Ambedkar Nagar(Kapra)">Ambedkar Nagar(Kapra)</option>
+                      <option value="Ankireddipalli Bus Stop">Ankireddipalli Bus Stop</option>
+                      <option value="Apuroopa Bus Stop">Apuroopa Bus Stop</option>
+                      <option value="Arutla">Arutla</option>
+                      <option value="BHEL">BHEL</option>
+                      <option value="BN Reddy Nagar Bus Stop">BN Reddy Nagar Bus Stop</option>
+                      <option value="Bachupally">Bachupally</option>
+                      <option value="Bahadurpally">Bahadurpally</option>
+                      <option value="Balaji Nagar bus stop(Balaji Nagar)">Balaji Nagar bus stop(Balaji Nagar)</option>
+                      <option value="Balanagar Bus Stop">Balanagar Bus Stop</option>
+                      <option value="Balapur">Balapur</option>
+                      <option value="Bapu Ghat">Bapu Ghat</option>
+                      <option value="Barkas">Barkas</option>
+                      <option value="Bhudevi Nagar">Bhudevi Nagar</option>
+                      <option value="Bldg blocks">Bldg blocks</option>
+                      <option value="Boduppal">Boduppal</option>
+                      <option value="Bogaram Bus Stop">Bogaram Bus Stop</option>
+                      <option value="Bolarum Bus Station">Bolarum Bus Station</option>
+                      <option value="Borabanda Bus Stop">Borabanda Bus Stop</option>
+                      <option value="Bowrampet">Bowrampet</option>
+                      <option value="Brahmanpally">Brahmanpally</option>
+                      <option value="CBS Bus Stop">CBS Bus Stop</option>
+                      <option value="Chandulal Baradari">Chandulal Baradari</option>
+                      <option value="Charminar Bus Stop">Charminar Bus Stop</option>
+                      <option value="Cherlapally Bus Stop">Cherlapally Bus Stop</option>
+                      <option value="Church Colony">Church Colony</option>
+                      <option value="Dabilpur">Dabilpur</option>
+                      <option value="Dammaiguda(lake)">Dammaiguda(lake)</option>
+                      <option value="Dandumailaram">Dandumailaram</option>
+                      <option value="Deshmukhi">Deshmukhi</option>
+                      <option value="Dharmaram">Dharmaram</option>
+                      <option value="Dilsukhnagar Bus station">Dilsukhnagar Bus station</option>
+                      <option value="Doodh Bowli">Doodh Bowli</option>
+                      <option value="Dundigal Airbase">Dundigal Airbase</option>
+                      <option value="ECIL Bus Stop">ECIL Bus Stop</option>
+                      <option value="ESI Bus Stop">ESI Bus Stop</option>
+                      <option value="Falaknuma">Falaknuma</option>
+                      <option value="Film Nagar">Film Nagar</option>
+                      <option value="GPRA QTRS">GPRA QTRS</option>
+                      <option value="Gachibowli Bus Station">Gachibowli Bus Station</option>
+                      <option value="Gajularamaram">Gajularamaram</option>
+                      <option value="Ganeshpuri Colony">Ganeshpuri Colony</option>
+                      <option value="Gangaputra Colony Bus Stop">Gangaputra Colony Bus Stop</option>
+                      <option value="Gayatri Hills">Gayatri Hills</option>
+                      <option value="Geological Survey of India">Geological Survey of India</option>
+                      <option value="Gokhle Nagar">Gokhle Nagar</option>
+                      <option value="Golkonda Bus Stop">Golkonda Bus Stop</option>
+                      <option value="Gowdavalli">Gowdavalli</option>
+                      <option value="HCL Colony">HCL Colony</option>
+                      <option value="HCU Campus">HCU Campus</option>
+                      <option value="HMT colony">HMT colony</option>
+                      <option value="HUDA Complex">HUDA Complex</option>
+                      <option value="Hakimpet">Hakimpet</option>
+                      <option value="Hayath Nagar Bus Stop">Hayath Nagar Bus Stop</option>
+                      <option value="High Court(Post Office)">High Court(Post Office)</option>
+                      <option value="Himayat Sagar Road">Himayat Sagar Road</option>
+                      <option value="Hitech City Bus Stop">Hitech City Bus Stop</option>
+                      <option value="Hitech City MMTS Station">Hitech City MMTS Station</option>
+                      <option value="I S Sadan Complex">I S Sadan Complex</option>
+                      <option value="Ibrahimpatnam Bus Station">Ibrahimpatnam Bus Station</option>
+                      <option value="JBS Bus Stop">JBS Bus Stop</option>
+                      <option value="JNTU(Kukatpally) Bus Stop">JNTU(Kukatpally) Bus Stop</option>
+                      <option value="Jagadgiri Gutta Bus Stop">Jagadgiri Gutta Bus Stop</option>
+                      <option value="Jagapathi Hills">Jagapathi Hills</option>
+                      <option value="Jaheer Nagar">Jaheer Nagar</option>
+                      <option value="Jamal Colony">Jamal Colony</option>
+                      <option value="Jana Priya West City">Jana Priya West City</option>
+                      <option value="Janapriya Colony Bus Stop">Janapriya Colony Bus Stop</option>
+                      <option value="Jayapuri Colony">Jayapuri Colony</option>
+                      <option value="Jeedimetla Bus Stop">Jeedimetla Bus Stop</option>
+                      <option value="Jinnaram">Jinnaram</option>
+                      <option value="KK nagar">KK nagar</option>
+                      <option value="KPHB Colony Bus Stop">KPHB Colony Bus Stop</option>
+                      <option value="KPHB Colony MIG">KPHB Colony MIG</option>
+                      <option value="KPHB IVth phase">KPHB IVth phase</option>
+                      <option value="Kachiguda Bus Stop">Kachiguda Bus Stop</option>
+                      <option value="Kalimandir">Kalimandir</option>
+                      <option value="Kanapur">Kanapur</option>
+                      <option value="Kanukunta">Kanukunta</option>
+                      <option value="Karmanghat Bus Stop">Karmanghat Bus Stop</option>
+                      <option value="Karmika Nagar">Karmika Nagar</option>
+                      <option value="Kavvadipally">Kavvadipally</option>
+                      <option value="Kazipally">Kazipally</option>
+                      <option value="Keesara guta">Keesara guta</option>
+                      <option value="Kesav Giri">Kesav Giri</option>
+                      <option value="Kismatpura">Kismatpura</option>
+                      <option value="Kondapur Bus Stop">Kondapur Bus Stop</option>
+                      <option value="Kongara Kalan">Kongara Kalan</option>
+                      <option value="Koti Bus Stop">Koti Bus Stop</option>
+                      <option value="Kotla Ali Jah">Kotla Ali Jah</option>
+                      <option value="Kukatpally Bus Stop">Kukatpally Bus Stop</option>
+                      <option value="Kushaiguda">Kushaiguda</option>
+                      <option value="LB Nagar Bus Stop">LB Nagar Bus Stop</option>
+                      <option value="Lab Quarters Main Bus Stop">Lab Quarters Main Bus Stop</option>
+                      <option value="Lakdikapool Bus Stop">Lakdikapool Bus Stop</option>
+                      <option value="Lal Bazar Bus Stop">Lal Bazar Bus Stop</option>
+                      <option value="Lalaguda Bus Stop">Lalaguda Bus Stop</option>
+                      <option value="Laxmapur">Laxmapur</option>
+                      <option value="Laxmiguda">Laxmiguda</option>
+                      <option value="Lingampally Bus Stop">Lingampally Bus Stop</option>
+                      <option value="M M kunta">M M kunta</option>
+                      <option value="MB Darga">MB Darga</option>
+                      <option value="MGBS Bus Stop">MGBS Bus Stop</option>
+                      <option value="Madhuban colony">Madhuban colony</option>
+                      <option value="Maruthi Nagar(Kothapet)">Maruthi Nagar(Kothapet)</option>
+                      <option value="Medchal">Medchal</option>
+                      <option value="Mehdipatnam Bus Stop">Mehdipatnam Bus Stop</option>
+                      <option value="Miyapur X Roads">Miyapur X Roads</option>
+                      <option value="Moti Darwaza">Moti Darwaza</option>
+                      <option value="Moula Ali">Moula Ali</option>
+                      <option value="NFC(ECIL)">NFC(ECIL)</option>
+                      <option value="NGOs Colony Bus Stop">NGOs Colony Bus Stop</option>
+                      <option value="NTR Nagar(L B Nagar)">NTR Nagar(L B Nagar)</option>
+                      <option value="Nadargul">Nadargul</option>
+                      <option value="Nagarjuna Sagar Road">Nagarjuna Sagar Road</option>
+                      <option value="Nagole Bus Stop">Nagole Bus Stop</option>
+                      <option value="Nampally">Nampally</option>
+                      <option value="Nanakramguda">Nanakramguda</option>
+                      <option value="Narsapur">Narsapur</option>
+                      <option value="Narsingi Bus Stop">Narsingi Bus Stop</option>
+                      <option value="Neredmet X Road Bus Stop">Neredmet X Road Bus Stop</option>
+                      <option value="New Gayathri Nagar Colony Bus Stop">New Gayathri Nagar Colony Bus Stop</option>
+                      <option value="New Maruthi Nagar">New Maruthi Nagar</option>
+                      <option value="Nutankal">Nutankal</option>
+                      <option value="Old Bowenpally Bus Stop">Old Bowenpally Bus Stop</option>
+                      <option value="Osman sagar Road">Osman sagar Road</option>
+                      <option value="Pahadi Shareef">Pahadi Shareef</option>
+                      <option value="Panyal/Konyal">Panyal/Konyal</option>
+                      <option value="Patancheru Bus Stop">Patancheru Bus Stop</option>
+                      <option value="Patel Nagar(Amberpet)">Patel Nagar(Amberpet)</option>
+                      <option value="Patelguda">Patelguda</option>
+                      <option value="Peddamma Gudi">Peddamma Gudi</option>
+                      <option value="Pocharam Village Main Rd">Pocharam Village Main Rd</option>
+                      <option value="Pragathi Nagar Bus Stop">Pragathi Nagar Bus Stop</option>
+                      <option value="Prajay Sai Gardens">Prajay Sai Gardens</option>
+                      <option value="Prasanth Nagar(Moula Ali)">Prasanth Nagar(Moula Ali)</option>
+                      <option value="Pudur">Pudur</option>
+                      <option value="Puppalaguda">Puppalaguda</option>
+                      <option value="RN Reddy Colony">RN Reddy Colony</option>
+                      <option value="RTC Colony(Moula ali)">RTC Colony(Moula ali)</option>
+                      <option value="Railapur">Railapur</option>
+                      <option value="Rajeev Nagar">Rajeev Nagar</option>
+                      <option value="Rajendra Nagar Bus Depot Bus Stop">Rajendra Nagar Bus Depot Bus Stop</option>
+                      <option value="Rajiv Gruhakalpa Colony">Rajiv Gruhakalpa Colony</option>
+                      <option value="Ram Nagar">Ram Nagar</option>
+                      <option value="Ramdaspally">Ramdaspally</option>
+                      <option value="Ranigunj Bus Stop">Ranigunj Bus Stop</option>
+                      <option value="Risala Bazar">Risala Bazar</option>
+                      <option value="SBI Colony(Kothapet)">SBI Colony(Kothapet)</option>
+                      <option value="Safilguda Bus Stop">Safilguda Bus Stop</option>
+                      <option value="Sahara Bus Stop">Sahara Bus Stop</option>
+                      <option value="Saheb Nagar(Vanasthalipuram)">Saheb Nagar(Vanasthalipuram)</option>
+                      <option value="Sai Nagar(Bala Nagar)">Sai Nagar(Bala Nagar)</option>
+                      <option value="Saibaba Nagar(Jeedimetla)">Saibaba Nagar(Jeedimetla)</option>
+                      <option value="Saidabad Bus Stop">Saidabad Bus Stop</option>
+                      <option value="Sanath Nagar Bus Stop">Sanath Nagar Bus Stop</option>
+                      <option value="Sanikpuri Bus Stop">Sanikpuri Bus Stop</option>
+                      <option value="Saroor Nagar Bus Terminal">Saroor Nagar Bus Terminal</option>
+                      <option value="Secunderabad Junction">Secunderabad Junction</option>
+                      <option value="Shah ali banda New Bus Stop">Shah ali banda New Bus Stop</option>
+                      <option value="Shaikpet Darga Bus Stop">Shaikpet Darga Bus Stop</option>
+                      <option value="Shamshabad Bus Stop">Shamshabad Bus Stop</option>
+                      <option value="Snehapuri Colony Bus Stop">Snehapuri Colony Bus Stop</option>
+                      <option value="South End Park">South End Park</option>
+                      <option value="Sri Ram Nagar(Chintal)">Sri Ram Nagar(Chintal)</option>
+                      <option value="Srinivas Nagar Bus Stop">Srinivas Nagar Bus Stop</option>
+                      <option value="Sripuram Colony Stop">Sripuram Colony Stop</option>
+                      <option value="Subhash Nagar(Jeedimetla)">Subhash Nagar(Jeedimetla)</option>
+                      <option value="Suchitra Bus Stop">Suchitra Bus Stop</option>
+                      <option value="Suraram">Suraram</option>
+                      <option value="Syed Nagar">Syed Nagar</option>
+                      <option value="Tallagada">Tallagada</option>
+                      <option value="Telephone Colony(Kothapet)">Telephone Colony(Kothapet)</option>
+                      <option value="Timmapally Bus Stop">Timmapally Bus Stop</option>
+                      <option value="Tolichowki Bus Stop">Tolichowki Bus Stop</option>
+                      <option value="Uppal Bus Stop">Uppal Bus Stop</option>
+                      <option value="Uppal Depot">Uppal Depot</option>
+                      <option value="Uppal X Road Bus Stop">Uppal X Road Bus Stop</option>
+                      <option value="Upparpally X Road">Upparpally X Road</option>
+                      <option value="Upperguda">Upperguda</option>
+                      <option value="Uppuguda">Uppuguda</option>
+                      <option value="V.V.Nagar bustop">V.V.Nagar bustop</option>
+                      <option value="VBIT(Ascendas IT Park)">VBIT(Ascendas IT Park)</option>
+                      <option value="VST Bus Stop">VST Bus Stop</option>
+                      <option value="Vampuguda">Vampuguda</option>
+                      <option value="Vanasthalipuram">Vanasthalipuram</option>
+                      <option value="Venkata Reddy Nagar Bus Stop">Venkata Reddy Nagar Bus Stop</option>
+                      <option value="Venkatapuram Last Bus Stop">Venkatapuram Last Bus Stop</option>
+                      <option value="Vijaya Hospital">Vijaya Hospital</option>
+                      <option value="Vivek Nagar">Vivek Nagar</option>
+                      <option value="Womens college Bus Stop">Womens college Bus Stop</option>
+                      <option value="Yacharam(Nagarjuna Sagar Road)">Yacharam(Nagarjuna Sagar Road)</option>
+                      <option value="Yamjal">Yamjal</option>
+                      <option value="Yapral Bus Stop">Yapral Bus Stop</option>
+                      <option value="Yousufguda basti Bus Stop">Yousufguda basti Bus Stop</option>
+                      <option value="Ziaguda">Ziaguda</option>
+                      <option value="Zoo Park">Zoo Park</option>
+                   </select>
+            </div>  
+            <div class="routes_list"><Span class="route-label">Route: </Span>
+
+              <select id="filter_route_id" class="filter_route" onchange="routeSelection()">
+                    <option value="ALL" selected="selected">ALL</option>
+                    <option value="1">1</option>
+                    <option value="1/229">1/229</option>
+                    <option value="1/94R">1/94R</option>
+                    <option value="10">10</option>
+                    <option value="10S">10S</option>
+                    <option value="100">100</option>
+                    <option value="100A">100A</option>
+                    <option value="100C">100C</option>
+                    <option value="100G">100G</option>
+                    <option value="100H">100H</option>
+                    <option value="100I">100I</option>
+                    <option value="100J">100J</option>
+                    <option value="100K">100K</option>
+                    <option value="100L">100L</option>
+                    <option value="100LG">100LG</option>
+                    <option value="100M">100M</option>
+                    <option value="100N">100N</option>
+                    <option value="100P">100P</option>
+                    <option value="100R">100R</option>
+                    <option value="100T">100T</option>
+                    <option value="100V">100V</option>
+                    <option value="100VK">100VK</option>
+                    <option value="101/1">101/1</option>
+                    <option value="101R">101R</option>
+                    <option value="101S">101S</option>
+                    <option value="102">102</option>
+                    <option value="102A">102A</option>
+                    <option value="102B">102B</option>
+                    <option value="102C">102C</option>
+                    <option value="102CJ">102CJ</option>
+                    <option value="102J">102J</option>
+                    <option value="102K">102K</option>
+                    <option value="102K/127J">102K/127J</option>
+                    <option value="102M">102M</option>
+                    <option value="102P">102P</option>
+                    <option value="102PM">102PM</option>
+                    <option value="103">103</option>
+                    <option value="104/127K">104/127K</option>
+                    <option value="104A">104A</option>
+                    <option value="104D">104D</option>
+                    <option value="104J">104J</option>
+                    <option value="104R">104R</option>
+                    <option value="104S">104S</option>
+                    <option value="105">105</option>
+                    <option value="107/299">107/299</option>
+                    <option value="107G">107G</option>
+                    <option value="107J">107J</option>
+                    <option value="107L/229">107L/229</option>
+                    <option value="107T">107T</option>
+                    <option value="107VK">107VK</option>
+                    <option value="107VR">107VR</option>
+                    <option value="10AS">10AS</option>
+                    <option value="10B">10B</option>
+                    <option value="10BK">10BK</option>
+                    <option value="10F">10F</option>
+                    <option value="10FY">10FY</option>
+                    <option value="10H">10H</option>
+                    <option value="10H/17H">10H/17H</option>
+                    <option value="10J">10J</option>
+                    <option value="10K">10K</option>
+                    <option value="10KJ">10KJ</option>
+                    <option value="10KL">10KL</option>
+                    <option value="10KP">10KP</option>
+                    <option value="10KV">10KV</option>
+                    <option value="10L">10L</option>
+                    <option value="10N">10N</option>
+                    <option value="10PF">10PF</option>
+                    <option value="10R">10R</option>
+                    <option value="10U">10U</option>
+                    <option value="10Y">10Y</option>
+                    <option value="10YF">10YF</option>
+                    <option value="10YH">10YH</option>
+                    <option value="11">11</option>
+                    <option value="111M">111M</option>
+                    <option value="113A">113A</option>
+                    <option value="113C">113C</option>
+                    <option value="113CK">113CK</option>
+                    <option value="113E">113E</option>
+                    <option value="113EC">113EC</option>
+                    <option value="113EK">113EK</option>
+                    <option value="113EX">113EX</option>
+                    <option value="113H">113H</option>
+                    <option value="113K">113K</option>
+                    <option value="113LM">113LM</option>
+                    <option value="113M">113M</option>
+                    <option value="113Y">113Y</option>
+                    <option value="115">115</option>
+                    <option value="115/127">115/127</option>
+                    <option value="115C">115C</option>
+                    <option value="115RS">115RS</option>
+                    <option value="115V">115V</option>
+                    <option value="115ZP">115ZP</option>
+                    <option value="116">116</option>
+                    <option value="116N">116N</option>
+                    <option value="116T">116T</option>
+                    <option value="117">117</option>
+                    <option value="118H">118H</option>
+                    <option value="118T">118T</option>
+                    <option value="118W">118W</option>
+                    <option value="119">119</option>
+                    <option value="11M">11M</option>
+                    <option value="11N">11N</option>
+                    <option value="12">12</option>
+                    <option value="120">120</option>
+                    <option value="120K">120K</option>
+                    <option value="120M">120M</option>
+                    <option value="121">121</option>
+                    <option value="123">123</option>
+                    <option value="123/5C">123/5C</option>
+                    <option value="126KV">126KV</option>
+                    <option value="127B">127B</option>
+                    <option value="127CK">127CK</option>
+                    <option value="127F">127F</option>
+                    <option value="127J">127J</option>
+                    <option value="127J/115">127J/115</option>
+                    <option value="127JK">127JK</option>
+                    <option value="127K">127K</option>
+                    <option value="127KC">127KC</option>
+                    <option value="127KV">127KV</option>
+                    <option value="127M">127M</option>
+                    <option value="127N">127N</option>
+                    <option value="127PK/96">127PK/96</option>
+                    <option value="127T">127T</option>
+                    <option value="127VB">127VB</option>
+                    <option value="131">131</option>
+                    <option value="135">135</option>
+                    <option value="136B">136B</option>
+                    <option value="136D">136D</option>
+                    <option value="136H">136H</option>
+                    <option value="136L">136L</option>
+                    <option value="136N">136N</option>
+                    <option value="136S">136S</option>
+                    <option value="136V">136V</option>
+                    <option value="137">137</option>
+                    <option value="139">139</option>
+                    <option value="14">14</option>
+                    <option value="141">141</option>
+                    <option value="142K">142K</option>
+                    <option value="142N">142N</option>
+                    <option value="142S">142S</option>
+                    <option value="143A">143A</option>
+                    <option value="143K">143K</option>
+                    <option value="143M">143M</option>
+                    <option value="147">147</option>
+                    <option value="14P">14P</option>
+                    <option value="15">15</option>
+                    <option value="152">152</option>
+                    <option value="152G">152G</option>
+                    <option value="156">156</option>
+                    <option value="156B">156B</option>
+                    <option value="156G">156G</option>
+                    <option value="156H">156H</option>
+                    <option value="156K">156K</option>
+                    <option value="156V">156V</option>
+                    <option value="158">158</option>
+                    <option value="158F">158F</option>
+                    <option value="158J">158J</option>
+                    <option value="158K">158K</option>
+                    <option value="158L">158L</option>
+                    <option value="158M">158M</option>
+                    <option value="158N">158N</option>
+                    <option value="158S">158S</option>
+                    <option value="158V">158V</option>
+                    <option value="15D">15D</option>
+                    <option value="15H">15H</option>
+                    <option value="15H/242RG">15H/242RG</option>
+                    <option value="15IG">15IG</option>
+                    <option value="16A">16A</option>
+                    <option value="16A/102">16A/102</option>
+                    <option value="16A/10F">16A/10F</option>
+                    <option value="16A/242">16A/242</option>
+                    <option value="16A/49M">16A/49M</option>
+                    <option value="16A/5N">16A/5N</option>
+                    <option value="16AK">16AK</option>
+                    <option value="16AS">16AS</option>
+                    <option value="16C">16C</option>
+                    <option value="16E">16E</option>
+                    <option value="16ES">16ES</option>
+                    <option value="16H">16H</option>
+                    <option value="16H/10H">16H/10H</option>
+                    <option value="16H/47L">16H/47L</option>
+                    <option value="16KP">16KP</option>
+                    <option value="16NY">16NY</option>
+                    <option value="16P">16P</option>
+                    <option value="16R">16R</option>
+                    <option value="16RK">16RK</option>
+                    <option value="16T">16T</option>
+                    <option value="16V">16V</option>
+                    <option value="17">17</option>
+                    <option value="17/226">17/226</option>
+                    <option value="171">171</option>
+                    <option value="171C">171C</option>
+                    <option value="171K">171K</option>
+                    <option value="171M">171M</option>
+                    <option value="171SM">171SM</option>
+                    <option value="178AG">178AG</option>
+                    <option value="178R">178R</option>
+                    <option value="178V">178V</option>
+                    <option value="17CS">17CS</option>
+                    <option value="17D">17D</option>
+                    <option value="17DN/10K">17DN/10K</option>
+                    <option value="17H">17H</option>
+                    <option value="17H/10H">17H/10H</option>
+                    <option value="17H/10I">17H/10I</option>
+                    <option value="17H/226C">17H/226C</option>
+                    <option value="17H/229">17H/229</option>
+                    <option value="17HN">17HN</option>
+                    <option value="17HN/47L">17HN/47L</option>
+                    <option value="17JJ">17JJ</option>
+                    <option value="17S">17S</option>
+                    <option value="17SS">17SS</option>
+                    <option value="18">18</option>
+                    <option value="18/10L">18/10L</option>
+                    <option value="185N">185N</option>
+                    <option value="185S">185S</option>
+                    <option value="186">186</option>
+                    <option value="187">187</option>
+                    <option value="187D">187D</option>
+                    <option value="187DV">187DV</option>
+                    <option value="187I">187I</option>
+                    <option value="187J">187J</option>
+                    <option value="187P">187P</option>
+                    <option value="188/251">188/251</option>
+                    <option value="188H">188H</option>
+                    <option value="189GS">189GS</option>
+                    <option value="189M">189M</option>
+                    <option value="189SM">189SM</option>
+                    <option value="18B">18B</option>
+                    <option value="18C">18C</option>
+                    <option value="18L">18L</option>
+                    <option value="18R">18R</option>
+                    <option value="18V">18V</option>
+                    <option value="190F">190F</option>
+                    <option value="190R">190R</option>
+                    <option value="190RK">190RK</option>
+                    <option value="191K">191K</option>
+                    <option value="193">193</option>
+                    <option value="194H">194H</option>
+                    <option value="194V">194V</option>
+                    <option value="19F">19F</option>
+                    <option value="19FS">19FS</option>
+                    <option value="19K">19K</option>
+                    <option value="19KJ">19KJ</option>
+                    <option value="19KS">19KS</option>
+                    <option value="19M">19M</option>
+                    <option value="19YF">19YF</option>
+                    <option value="1B">1B</option>
+                    <option value="1E">1E</option>
+                    <option value="1F/38S">1F/38S</option>
+                    <option value="1H">1H</option>
+                    <option value="1HD">1HD</option>
+                    <option value="1J">1J</option>
+                    <option value="1K">1K</option>
+                    <option value="1K/229">1K/229</option>
+                    <option value="1K/25">1K/25</option>
+                    <option value="1L">1L</option>
+                    <option value="1MD">1MD</option>
+                    <option value="1P">1P</option>
+                    <option value="1P/225">1P/225</option>
+                    <option value="1P/25I">1P/25I</option>
+                    <option value="1R">1R</option>
+                    <option value="1V">1V</option>
+                    <option value="1V/229">1V/229</option>
+                    <option value="1Y">1Y</option>
+                    <option value="1I">1I</option>
+                    <option value="2">2</option>
+                    <option value="20/251">20/251</option>
+                    <option value="201">201</option>
+                    <option value="201G">201G</option>
+                    <option value="201K">201K</option>
+                    <option value="201M">201M</option>
+                    <option value="202">202</option>
+                    <option value="202T">202T</option>
+                    <option value="203A">203A</option>
+                    <option value="203K">203K</option>
+                    <option value="203N">203N</option>
+                    <option value="204">204</option>
+                    <option value="204K">204K</option>
+                    <option value="204P">204P</option>
+                    <option value="204S">204S</option>
+                    <option value="205">205</option>
+                    <option value="205A">205A</option>
+                    <option value="205B">205B</option>
+                    <option value="205M">205M</option>
+                    <option value="206">206</option>
+                    <option value="206/290">206/290</option>
+                    <option value="208">208</option>
+                    <option value="208C">208C</option>
+                    <option value="208R">208R</option>
+                    <option value="209">209</option>
+                    <option value="20D">20D</option>
+                    <option value="20M">20M</option>
+                    <option value="20P">20P</option>
+                    <option value="20V">20V</option>
+                    <option value="21">21</option>
+                    <option value="21/107J">21/107J</option>
+                    <option value="211">211</option>
+                    <option value="211A">211A</option>
+                    <option value="211B">211B</option>
+                    <option value="211C">211C</option>
+                    <option value="211D">211D</option>
+                    <option value="211DY">211DY</option>
+                    <option value="211E">211E</option>
+                    <option value="211K">211K</option>
+                    <option value="211M">211M</option>
+                    <option value="211P">211P</option>
+                    <option value="211S">211S</option>
+                    <option value="211T">211T</option>
+                    <option value="211U">211U</option>
+                    <option value="212">212</option>
+                    <option value="216">216</option>
+                    <option value="216KL">216KL</option>
+                    <option value="216M">216M</option>
+                    <option value="216U">216U</option>
+                    <option value="217">217</option>
+                    <option value="217CK">217CK</option>
+                    <option value="217D">217D</option>
+                    <option value="218">218</option>
+                    <option value="218C">218C</option>
+                    <option value="218D">218D</option>
+                    <option value="219">219</option>
+                    <option value="219 L/P">219 L/P</option>
+                    <option value="219/229">219/229</option>
+                    <option value="21B">21B</option>
+                    <option value="21W">21W</option>
+                    <option value="22">22</option>
+                    <option value="22/102">22/102</option>
+                    <option value="22/1P">22/1P</option>
+                    <option value="220J">220J</option>
+                    <option value="220K">220K</option>
+                    <option value="220M">220M</option>
+                    <option value="220V">220V</option>
+                    <option value="222">222</option>
+                    <option value="222A">222A</option>
+                    <option value="222M">222M</option>
+                    <option value="222V">222V</option>
+                    <option value="223B">223B</option>
+                    <option value="223F">223F</option>
+                    <option value="223LY">223LY</option>
+                    <option value="224B">224B</option>
+                    <option value="224G">224G</option>
+                    <option value="224H">224H</option>
+                    <option value="224HS">224HS</option>
+                    <option value="224HY">224HY</option>
+                    <option value="224JW">224JW</option>
+                    <option value="224K">224K</option>
+                    <option value="224S">224S</option>
+                    <option value="224X">224X</option>
+                    <option value="225">225</option>
+                    <option value="225CL">225CL</option>
+                    <option value="225D">225D</option>
+                    <option value="225L">225L</option>
+                    <option value="225LV">225LV</option>
+                    <option value="225M">225M</option>
+                    <option value="226">226</option>
+                    <option value="226E">226E</option>
+                    <option value="226J">226J</option>
+                    <option value="226L">226L</option>
+                    <option value="226M">226M</option>
+                    <option value="227">227</option>
+                    <option value="229">229</option>
+                    <option value="229D">229D</option>
+                    <option value="229DR">229DR</option>
+                    <option value="229L">229L</option>
+                    <option value="229M">229M</option>
+                    <option value="229N">229N</option>
+                    <option value="229P">229P</option>
+                    <option value="229R">229R</option>
+                    <option value="229RG">229RG</option>
+                    <option value="229RL">229RL</option>
+                    <option value="229RT">229RT</option>
+                    <option value="229S">229S</option>
+                    <option value="229T">229T</option>
+                    <option value="22D">22D</option>
+                    <option value="22K">22K</option>
+                    <option value="22L">22L</option>
+                    <option value="22M">22M</option>
+                    <option value="22R">22R</option>
+                    <option value="22R/229">22R/229</option>
+                    <option value="22S">22S</option>
+                    <option value="22T">22T</option>
+                    <option value="23">23</option>
+                    <option value="230A">230A</option>
+                    <option value="230D">230D</option>
+                    <option value="230V">230V</option>
+                    <option value="230X">230X</option>
+                    <option value="231K">231K</option>
+                    <option value="233">233</option>
+                    <option value="233N">233N</option>
+                    <option value="234">234</option>
+                    <option value="234M">234M</option>
+                    <option value="235">235</option>
+                    <option value="235G">235G</option>
+                    <option value="23B">23B</option>
+                    <option value="23G">23G</option>
+                    <option value="23M">23M</option>
+                    <option value="23M/283">23M/283</option>
+                    <option value="241T">241T</option>
+                    <option value="242">242</option>
+                    <option value="242A">242A</option>
+                    <option value="242B">242B</option>
+                    <option value="242G">242G</option>
+                    <option value="242PG">242PG</option>
+                    <option value="242RG">242RG</option>
+                    <option value="245">245</option>
+                    <option value="245A">245A</option>
+                    <option value="245J">245J</option>
+                    <option value="24B">24B</option>
+                    <option value="24B/211RG">24B/211RG</option>
+                    <option value="24E">24E</option>
+                    <option value="24E/25S">24E/25S</option>
+                    <option value="24E/31H">24E/31H</option>
+                    <option value="24N">24N</option>
+                    <option value="24N/25S">24N/25S</option>
+                    <option value="250">250</option>
+                    <option value="250/16A">250/16A</option>
+                    <option value="250C">250C</option>
+                    <option value="250C/10F">250C/10F</option>
+                    <option value="250H">250H</option>
+                    <option value="250N">250N</option>
+                    <option value="250P">250P</option>
+                    <option value="250RG/49M">250RG/49M</option>
+                    <option value="250S">250S</option>
+                    <option value="250X">250X</option>
+                    <option value="251">251</option>
+                    <option value="251A">251A</option>
+                    <option value="251AG">251AG</option>
+                    <option value="251B">251B</option>
+                    <option value="251J">251J</option>
+                    <option value="251K">251K</option>
+                    <option value="251KV">251KV</option>
+                    <option value="251L">251L</option>
+                    <option value="251M">251M</option>
+                    <option value="251N">251N</option>
+                    <option value="251S">251S</option>
+                    <option value="252">252</option>
+                    <option value="252D">252D</option>
+                    <option value="252H">252H</option>
+                    <option value="252N">252N</option>
+                    <option value="253">253</option>
+                    <option value="253G">253G</option>
+                    <option value="253H">253H</option>
+                    <option value="253L">253L</option>
+                    <option value="253L/102">253L/102</option>
+                    <option value="253M">253M</option>
+                    <option value="254">254</option>
+                    <option value="254M">254M</option>
+                    <option value="255">255</option>
+                    <option value="25A">25A</option>
+                    <option value="25B">25B</option>
+                    <option value="25I">25I</option>
+                    <option value="25J">25J</option>
+                    <option value="25M">25M</option>
+                    <option value="25S">25S</option>
+                    <option value="26">26</option>
+                    <option value="26G">26G</option>
+                    <option value="26M">26M</option>
+                    <option value="26N">26N</option>
+                    <option value="26N/229">26N/229</option>
+                    <option value="26N/49M">26N/49M</option>
+                    <option value="26S">26S</option>
+                    <option value="26SN">26SN</option>
+                    <option value="27">27</option>
+                    <option value="272">272</option>
+                    <option value="272C">272C</option>
+                    <option value="272JB">272JB</option>
+                    <option value="272K">272K</option>
+                    <option value="277">277</option>
+                    <option value="277/102">277/102</option>
+                    <option value="277B">277B</option>
+                    <option value="277D">277D</option>
+                    <option value="277H">277H</option>
+                    <option value="277K">277K</option>
+                    <option value="277M">277M</option>
+                    <option value="277MP">277MP</option>
+                    <option value="277N">277N</option>
+                    <option value="277P">277P</option>
+                    <option value="277R">277R</option>
+                    <option value="277T">277T</option>
+                    <option value="277U">277U</option>
+                    <option value="277V">277V</option>
+                    <option value="277Y">277Y</option>
+                    <option value="279">279</option>
+                    <option value="279U">279U</option>
+                    <option value="280">280</option>
+                    <option value="280B">280B</option>
+                    <option value="280B/K">280B/K</option>
+                    <option value="280E">280E</option>
+                    <option value="280N">280N</option>
+                    <option value="280S">280S</option>
+                    <option value="281">281</option>
+                    <option value="283">283</option>
+                    <option value="283C">283C</option>
+                    <option value="283D">283D</option>
+                    <option value="283I">283I</option>
+                    <option value="283N">283N</option>
+                    <option value="283S">283S</option>
+                    <option value="283T">283T</option>
+                    <option value="284G">284G</option>
+                    <option value="284P">284P</option>
+                    <option value="284S">284S</option>
+                    <option value="287N">287N</option>
+                    <option value="288">288</option>
+                    <option value="288/19F">288/19F</option>
+                    <option value="288A">288A</option>
+                    <option value="288B">288B</option>
+                    <option value="288C">288C</option>
+                    <option value="288D">288D</option>
+                    <option value="288M">288M</option>
+                    <option value="288N">288N</option>
+                    <option value="288P">288P</option>
+                    <option value="288R">288R</option>
+                    <option value="288S">288S</option>
+                    <option value="288X">288X</option>
+                    <option value="288Y">288Y</option>
+                    <option value="289M">289M</option>
+                    <option value="290">290</option>
+                    <option value="290/250">290/250</option>
+                    <option value="290AF">290AF</option>
+                    <option value="290J">290J</option>
+                    <option value="290K">290K</option>
+                    <option value="290KP">290KP</option>
+                    <option value="290Q">290Q</option>
+                    <option value="290S">290S</option>
+                    <option value="290U">290U</option>
+                    <option value="291">291</option>
+                    <option value="293">293</option>
+                    <option value="293 V">293 V</option>
+                    <option value="293S">293S</option>
+                    <option value="299">299</option>
+                    <option value="299A">299A</option>
+                    <option value="299D">299D</option>
+                    <option value="299H">299H</option>
+                    <option value="299M">299M</option>
+                    <option value="299P">299P</option>
+                    <option value="299S">299S</option>
+                    <option value="29CB">29CB</option>
+                    <option value="29H">29H</option>
+                    <option value="29Q">29Q</option>
+                    <option value="29R">29R</option>
+                    <option value="29S">29S</option>
+                    <option value="29SN">29SN</option>
+                    <option value="2C">2C</option>
+                    <option value="2D">2D</option>
+                    <option value="2J">2J</option>
+                    <option value="2U">2U</option>
+                    <option value="2V">2V</option>
+                    <option value="2Z">2Z</option>
+                    <option value="3">3</option>
+                    <option value="3/242RG">3/242RG</option>
+                    <option value="30">30</option>
+                    <option value="30A">30A</option>
+                    <option value="30C">30C</option>
+                    <option value="30J">30J</option>
+                    <option value="30S">30S</option>
+                    <option value="30S/31">30S/31</option>
+                    <option value="31">31</option>
+                    <option value="31A">31A</option>
+                    <option value="31H">31H</option>
+                    <option value="31L">31L</option>
+                    <option value="31P">31P</option>
+                    <option value="31V">31V</option>
+                    <option value="32A">32A</option>
+                    <option value="33N">33N</option>
+                    <option value="33S">33S</option>
+                    <option value="34">34</option>
+                    <option value="35">35</option>
+                    <option value="35A">35A</option>
+                    <option value="36">36</option>
+                    <option value="37">37</option>
+                    <option value="37/10K">37/10K</option>
+                    <option value="37/250">37/250</option>
+                    <option value="37/47">37/47</option>
+                    <option value="37AL">37AL</option>
+                    <option value="37B">37B</option>
+                    <option value="37D">37D</option>
+                    <option value="37DL">37DL</option>
+                    <option value="37E">37E</option>
+                    <option value="37H">37H</option>
+                    <option value="37L/49M">37L/49M</option>
+                    <option value="37N">37N</option>
+                    <option value="37N/49M">37N/49M</option>
+                    <option value="37RK">37RK</option>
+                    <option value="37S">37S</option>
+                    <option value="37S/10F">37S/10F</option>
+                    <option value="38A">38A</option>
+                    <option value="38E">38E</option>
+                    <option value="38EX">38EX</option>
+                    <option value="38H">38H</option>
+                    <option value="38K">38K</option>
+                    <option value="38LC">38LC</option>
+                    <option value="38S/47V">38S/47V</option>
+                    <option value="38X">38X</option>
+                    <option value="39K">39K</option>
+                    <option value="3A">3A</option>
+                    <option value="3B">3B</option>
+                    <option value="3C">3C</option>
+                    <option value="3CL">3CL</option>
+                    <option value="3D">3D</option>
+                    <option value="3E">3E</option>
+                    <option value="3G">3G</option>
+                    <option value="3H">3H</option>
+                    <option value="3H/242">3H/242</option>
+                    <option value="3H/95A">3H/95A</option>
+                    <option value="3HN">3HN</option>
+                    <option value="3I">3I</option>
+                    <option value="3JJ">3JJ</option>
+                    <option value="3K">3K</option>
+                    <option value="3KJ">3KJ</option>
+                    <option value="3KL">3KL</option>
+                    <option value="3M">3M</option>
+                    <option value="3N">3N</option>
+                    <option value="3P">3P</option>
+                    <option value="3R">3R</option>
+                    <option value="3S">3S</option>
+                    <option value="3SS">3SS</option>
+                    <option value="3Y">3Y</option>
+                    <option value="3Z">3Z</option>
+                    <option value="4">4</option>
+                    <option value="40">40</option>
+                    <option value="401">401</option>
+                    <option value="402">402</option>
+                    <option value="403">403</option>
+                    <option value="404">404</option>
+                    <option value="405">405</option>
+                    <option value="406">406</option>
+                    <option value="407">407</option>
+                    <option value="408">408</option>
+                    <option value="409">409</option>
+                    <option value="40D">40D</option>
+                    <option value="40I">40I</option>
+                    <option value="40N">40N</option>
+                    <option value="40T">40T</option>
+                    <option value="40V">40V</option>
+                    <option value="41">41</option>
+                    <option value="410">410</option>
+                    <option value="411">411</option>
+                    <option value="412">412</option>
+                    <option value="413">413</option>
+                    <option value="41C">41C</option>
+                    <option value="41K">41K</option>
+                    <option value="41N">41N</option>
+                    <option value="41S/185">41S/185</option>
+                    <option value="421">421</option>
+                    <option value="422">422</option>
+                    <option value="427">427</option>
+                    <option value="428">428</option>
+                    <option value="43">43</option>
+                    <option value="430">430</option>
+                    <option value="431">431</option>
+                    <option value="433">433</option>
+                    <option value="434">434</option>
+                    <option value="436">436</option>
+                    <option value="439">439</option>
+                    <option value="44">44</option>
+                    <option value="440">440</option>
+                    <option value="443">443</option>
+                    <option value="444">444</option>
+                    <option value="445">445</option>
+                    <option value="446">446</option>
+                    <option value="448">448</option>
+                    <option value="449">449</option>
+                    <option value="44L">44L</option>
+                    <option value="44X">44X</option>
+                    <option value="45">45</option>
+                    <option value="450">450</option>
+                    <option value="451">451</option>
+                    <option value="453">453</option>
+                    <option value="454">454</option>
+                    <option value="458">458</option>
+                    <option value="459">459</option>
+                    <option value="45A">45A</option>
+                    <option value="45F">45F</option>
+                    <option value="45G">45G</option>
+                    <option value="45GY">45GY</option>
+                    <option value="45J">45J</option>
+                    <option value="45K">45K</option>
+                    <option value="45MF">45MF</option>
+                    <option value="45MH">45MH</option>
+                    <option value="45RF">45RF</option>
+                    <option value="45S">45S</option>
+                    <option value="45Y">45Y</option>
+                    <option value="460">460</option>
+                    <option value="461">461</option>
+                    <option value="462">462</option>
+                    <option value="463">463</option>
+                    <option value="464">464</option>
+                    <option value="467">467</option>
+                    <option value="468">468</option>
+                    <option value="469">469</option>
+                    <option value="470">470</option>
+                    <option value="471">471</option>
+                    <option value="471C">471C</option>
+                    <option value="471K">471K</option>
+                    <option value="472">472</option>
+                    <option value="473">473</option>
+                    <option value="474">474</option>
+                    <option value="475">475</option>
+                    <option value="477">477</option>
+                    <option value="478">478</option>
+                    <option value="479">479</option>
+                    <option value="47C">47C</option>
+                    <option value="47F">47F</option>
+                    <option value="47G">47G</option>
+                    <option value="47H">47H</option>
+                    <option value="47K">47K</option>
+                    <option value="47L">47L</option>
+                    <option value="47LV">47LV</option>
+                    <option value="47N">47N</option>
+                    <option value="47S">47S</option>
+                    <option value="47V">47V</option>
+                    <option value="47Y">47Y</option>
+                    <option value="47YG">47YG</option>
+                    <option value="47ZC">47ZC</option>
+                    <option value="48">48</option>
+                    <option value="481">481</option>
+                    <option value="482">482</option>
+                    <option value="483">483</option>
+                    <option value="485">485</option>
+                    <option value="486">486</option>
+                    <option value="487">487</option>
+                    <option value="488">488</option>
+                    <option value="49">49</option>
+                    <option value="49/86">49/86</option>
+                    <option value="490">490</option>
+                    <option value="491">491</option>
+                    <option value="492">492</option>
+                    <option value="493">493</option>
+                    <option value="494">494</option>
+                    <option value="495">495</option>
+                    <option value="495D">495D</option>
+                    <option value="496">496</option>
+                    <option value="497">497</option>
+                    <option value="498">498</option>
+                    <option value="498V">498V</option>
+                    <option value="499">499</option>
+                    <option value="49A">49A</option>
+                    <option value="49E">49E</option>
+                    <option value="49J">49J</option>
+                    <option value="49K">49K</option>
+                    <option value="49L">49L</option>
+                    <option value="49M">49M</option>
+                    <option value="49M/250">49M/250</option>
+                    <option value="49M/251">49M/251</option>
+                    <option value="49N">49N</option>
+                    <option value="49P">49P</option>
+                    <option value="49V">49V</option>
+                    <option value="49Z">49Z</option>
+                    <option value="5">5</option>
+                    <option value="5/229">5/229</option>
+                    <option value="502">502</option>
+                    <option value="503">503</option>
+                    <option value="506">506</option>
+                    <option value="509">509</option>
+                    <option value="50B">50B</option>
+                    <option value="51">51</option>
+                    <option value="511">511</option>
+                    <option value="515">515</option>
+                    <option value="516">516</option>
+                    <option value="517">517</option>
+                    <option value="518">518</option>
+                    <option value="520">520</option>
+                    <option value="522">522</option>
+                    <option value="523">523</option>
+                    <option value="524">524</option>
+                    <option value="525">525</option>
+                    <option value="530">530</option>
+                    <option value="532">532</option>
+                    <option value="536">536</option>
+                    <option value="539">539</option>
+                    <option value="540">540</option>
+                    <option value="543">543</option>
+                    <option value="544">544</option>
+                    <option value="545">545</option>
+                    <option value="546">546</option>
+                    <option value="564">564</option>
+                    <option value="567">567</option>
+                    <option value="568">568</option>
+                    <option value="570">570</option>
+                    <option value="571">571</option>
+                    <option value="572">572</option>
+                    <option value="573">573</option>
+                    <option value="577">577</option>
+                    <option value="578">578</option>
+                    <option value="579">579</option>
+                    <option value="57S">57S</option>
+                    <option value="57ST">57ST</option>
+                    <option value="588">588</option>
+                    <option value="590">590</option>
+                    <option value="591">591</option>
+                    <option value="592">592</option>
+                    <option value="593">593</option>
+                    <option value="5B">5B</option>
+                    <option value="5BK">5BK</option>
+                    <option value="5BL">5BL</option>
+                    <option value="5C">5C</option>
+                    <option value="5G">5G</option>
+                    <option value="5GP">5GP</option>
+                    <option value="5K">5K</option>
+                    <option value="5K/120">5K/120</option>
+                    <option value="5K/188">5K/188</option>
+                    <option value="5K/250">5K/250</option>
+                    <option value="5L">5L</option>
+                    <option value="5M">5M</option>
+                    <option value="5MD">5MD</option>
+                    <option value="5P">5P</option>
+                    <option value="5PK">5PK</option>
+                    <option value="5R">5R</option>
+                    <option value="5S">5S</option>
+                    <option value="5SD">5SD</option>
+                    <option value="5SK">5SK</option>
+                    <option value="5T">5T</option>
+                    <option value="5TR">5TR</option>
+                    <option value="6">6</option>
+                    <option value="63B">63B</option>
+                    <option value="63K">63K</option>
+                    <option value="63M">63M</option>
+                    <option value="63S">63S</option>
+                    <option value="63SB">63SB</option>
+                    <option value="65">65</option>
+                    <option value="65/85">65/85</option>
+                    <option value="65A">65A</option>
+                    <option value="65C">65C</option>
+                    <option value="65G">65G</option>
+                    <option value="65GP">65GP</option>
+                    <option value="65M">65M</option>
+                    <option value="65P">65P</option>
+                    <option value="65S">65S</option>
+                    <option value="65T">65T</option>
+                    <option value="65V">65V</option>
+                    <option value="65Z">65Z</option>
+                    <option value="66G">66G</option>
+                    <option value="66P">66P</option>
+                    <option value="67">67</option>
+                    <option value="67B">67B</option>
+                    <option value="67K">67K</option>
+                    <option value="67L">67L</option>
+                    <option value="6B">6B</option>
+                    <option value="6C">6C</option>
+                    <option value="6G">6G</option>
+                    <option value="6H">6H</option>
+                    <option value="6J">6J</option>
+                    <option value="6K">6K</option>
+                    <option value="6M">6M</option>
+                    <option value="6R">6R</option>
+                    <option value="6S">6S</option>
+                    <option value="6T">6T</option>
+                    <option value="70">70</option>
+                    <option value="70/65">70/65</option>
+                    <option value="70A">70A</option>
+                    <option value="70B">70B</option>
+                    <option value="70M">70M</option>
+                    <option value="71">71</option>
+                    <option value="71A">71A</option>
+                    <option value="71B">71B</option>
+                    <option value="71D">71D</option>
+                    <option value="71Z">71Z</option>
+                    <option value="72">72</option>
+                    <option value="72A">72A</option>
+                    <option value="72B">72B</option>
+                    <option value="72J">72J</option>
+                    <option value="72JY">72JY</option>
+                    <option value="72L">72L</option>
+                    <option value="72LR">72LR</option>
+                    <option value="72LU">72LU</option>
+                    <option value="72M">72M</option>
+                    <option value="72N">72N</option>
+                    <option value="72R/8A">72R/8A</option>
+                    <option value="72V">72V</option>
+                    <option value="73">73</option>
+                    <option value="74">74</option>
+                    <option value="75A">75A</option>
+                    <option value="75R">75R</option>
+                    <option value="75U">75U</option>
+                    <option value="78">78</option>
+                    <option value="78H">78H</option>
+                    <option value="78L">78L</option>
+                    <option value="78S">78S</option>
+                    <option value="78V">78V</option>
+                    <option value="7C">7C</option>
+                    <option value="7I">7I</option>
+                    <option value="7K/229">7K/229</option>
+                    <option value="7M">7M</option>
+                    <option value="7V">7V</option>
+                    <option value="7Z">7Z</option>
+                    <option value="8/229">8/229</option>
+                    <option value="80D">80D</option>
+                    <option value="80I">80I</option>
+                    <option value="80K">80K</option>
+                    <option value="80L">80L</option>
+                    <option value="80P">80P</option>
+                    <option value="80R">80R</option>
+                    <option value="80S">80S</option>
+                    <option value="81">81</option>
+                    <option value="81H">81H</option>
+                    <option value="81R">81R</option>
+                    <option value="82/77">82/77</option>
+                    <option value="83B">83B</option>
+                    <option value="83G">83G</option>
+                    <option value="83JA">83JA</option>
+                    <option value="83K">83K</option>
+                    <option value="83P">83P</option>
+                    <option value="83S">83S</option>
+                    <option value="84">84</option>
+                    <option value="84H">84H</option>
+                    <option value="84S">84S</option>
+                    <option value="85">85</option>
+                    <option value="85B">85B</option>
+                    <option value="85H">85H</option>
+                    <option value="85J">85J</option>
+                    <option value="85M">85M</option>
+                    <option value="85V">85V</option>
+                    <option value="86">86</option>
+                    <option value="86/118I">86/118I</option>
+                    <option value="86/118M">86/118M</option>
+                    <option value="86/118T">86/118T</option>
+                    <option value="86/49M">86/49M</option>
+                    <option value="86C">86C</option>
+                    <option value="86I">86I</option>
+                    <option value="86J">86J</option>
+                    <option value="86K">86K</option>
+                    <option value="86N">86N</option>
+                    <option value="86RJ">86RJ</option>
+                    <option value="86S">86S</option>
+                    <option value="86Y">86Y</option>
+                    <option value="87">87</option>
+                    <option value="87S">87S</option>
+                    <option value="8A">8A</option>
+                    <option value="8C">8C</option>
+                    <option value="8C/229">8C/229</option>
+                    <option value="8DB">8DB</option>
+                    <option value="8M">8M</option>
+                    <option value="8M/251">8M/251</option>
+                    <option value="8R">8R</option>
+                    <option value="8RZ">8RZ</option>
+                    <option value="8S">8S</option>
+                    <option value="8U">8U</option>
+                    <option value="8V">8V</option>
+                    <option value="9">9</option>
+                    <option value="90/251">90/251</option>
+                    <option value="90A">90A</option>
+                    <option value="90A/107V">90A/107V</option>
+                    <option value="90D">90D</option>
+                    <option value="90D/107V">90D/107V</option>
+                    <option value="90D/203D">90D/203D</option>
+                    <option value="90D/47Y">90D/47Y</option>
+                    <option value="90DA">90DA</option>
+                    <option value="90J">90J</option>
+                    <option value="90K">90K</option>
+                    <option value="90L">90L</option>
+                    <option value="90L/250">90L/250</option>
+                    <option value="90L/251">90L/251</option>
+                    <option value="90M">90M</option>
+                    <option value="90MS">90MS</option>
+                    <option value="90NJ">90NJ</option>
+                    <option value="90R">90R</option>
+                    <option value="90U">90U</option>
+                    <option value="90UK">90UK</option>
+                    <option value="90V">90V</option>
+                    <option value="92E">92E</option>
+                    <option value="92R">92R</option>
+                    <option value="94H">94H</option>
+                    <option value="94K">94K</option>
+                    <option value="94L">94L</option>
+                    <option value="94R">94R</option>
+                    <option value="94U">94U</option>
+                    <option value="95A">95A</option>
+                    <option value="95K">95K</option>
+                    <option value="95L">95L</option>
+                    <option value="95LK">95LK</option>
+                    <option value="95M">95M</option>
+                    <option value="95P">95P</option>
+                    <option value="95R">95R</option>
+                    <option value="96N">96N</option>
+                    <option value="99K">99K</option>
+                    <option value="99M">99M</option>
+                    <option value="99V">99V</option>
+                    <option value="9A">9A</option>
+                    <option value="9B">9B</option>
+                    <option value="9BM">9BM</option>
+                    <option value="9C">9C</option>
+                    <option value="9D">9D</option>
+                    <option value="9E">9E</option>
+                    <option value="9F">9F</option>
+                    <option value="9FE">9FE</option>
+                    <option value="9G">9G</option>
+                    <option value="9GF">9GF</option>
+                    <option value="9J">9J</option>
+                    <option value="9J/84S">9J/84S</option>
+                    <option value="9K">9K</option>
+                    <option value="9K/102">9K/102</option>
+                    <option value="9K/227">9K/227</option>
+                    <option value="9KB">9KB</option>
+                    <option value="9M">9M</option>
+                    <option value="9ML">9ML</option>
+                    <option value="9N">9N</option>
+                    <option value="9Q">9Q</option>
+                    <option value="9R">9R</option>
+                    <option value="9SF">9SF</option>
+                    <option value="9V">9V</option>
+                    <option value="9X">9X</option>
+                    <option value="9Y">9Y</option>
+                    <option value="9YF">9YF</option>
+                    <option value="9YG">9YG</option>
+                    <option value="9YH">9YH</option>
+                    <option value="9Z">9Z</option>
+                    <option value="P1">P1</option>
+                 </select>
             </div>
-        <div class="header-container">
-                <p id="selected_date_range">Showing All Data</p>
-                <div class="btn-group">
-                    <button id="date_today" class="date-button" onclick="setDashboardDate('dttoday','date_today')"><span>Today</span></button>
-                    <button id="date_thisweek" class="date-button" onclick="setDashboardDate('dtthisweek','date_thisweek')"><span>Past 7 Days</span></button>
-                    <button id="date_thismonth" class="date-button" onclick="setDashboardDate('dtthismonth','date_thismonth')"><span>Past 30 days</span></button>
-                    <button id="date_custom" class="date-button" onclick="setDashboardDate('dtcustomdates','date_custom')"><span>Custom Date Range</span></button>
-                    <div id="custom-dates" class="custom-dates-container" style="display: none">
-                        <div class="date-labels"><Span>Start Date: </Span>
-                        <Span>End Date: </Span>
-                        </div>
-                        <div class="start-end-dates">
-                        <input id="filter_start_date" type="date">
-                        <input id="filter_end_date" type="date">
-                        </div>
-                        <div class="submit-date">
-                        <span class="date_selection_message" id="message_for_custom_date">.</span>
-                        <input id="custom_date_button" type="submit" onclick="customDateSubmitted()" >
-                        </div>
+
+            <div class="btn-group">
+                <button id="date_today" class="date-button" onclick="setDashboardDate('dttoday','date_today')"><span>Today</span></button>
+                <button id="date_thisweek" class="date-button" onclick="setDashboardDate('dtthisweek','date_thisweek')"><span>Past 7 Days</span></button>
+                <button id="date_thismonth" class="date-button" onclick="setDashboardDate('dtthismonth','date_thismonth')"><span>Past 30 days</span></button>
+                <button id="date_custom" class="date-button" onclick="setDashboardDate('dtcustomdates','date_custom')"><span>Custom Date Range</span></button>
+                <div id="custom-dates" class="custom-dates-container" style="display: none">
+                    <div class="date-labels"><Span>Showing data between Start Date: </Span>
+                      <Span>End Date: </Span>
+                    </div>
+                    <div class="start-end-dates">
+                      <input id="filter_start_date" type="date">
+                      <input id="filter_end_date" type="date">
+                    </div>
+                    <div class="submit-date">
+                      <span class="date_selection_message" id="message_for_custom_date">.</span>
+                      <input id="custom_date_button" type="submit" onclick="customDateSubmitted()" >
                     </div>
                 </div>
+            </div>
 
+      </div>
+
+      <div class="selected-date-label"><Span id="selected-start-label-id" class="label-selected-start-date">Start Date: </Span>
+          <Span>.  and  .</Span>
+          <Span id="selected-end-label-id" class="label-selected-end-date">End Date: </Span>
         </div>
-            <div class="dashboard-container">
-                                 <div id="table_div" ></div>
-            </div>   
 
-    <div class="footer-container">
-        <p id="footer_tab">1</p>
-    </div>
-    </div>
-    <script>
-        var accord = document.getElementsByClassName('accordion');
-        //  console.log(accord[0]);
-        var k;
+        <div class="dashboard-container">
+                <div class="charts-container">
+                        <div class="charts-row">
+                          <div class="charts-card">
+                          <div class="chart-render" id="dashboard_welcome_div">
+                                <div class="images_filler">
+                                        <img src="TSRTC_Logo.jpg" width="100%" height="15%"/>
+                                    </div>
+                            <p id="chart-text-id">
+                              <!-- <H1>Welcome to operational metrics dashboard!</H1> -->
+                              <!-- <H4>This dashboard summarizes metrics at city level, or individual stop level of Hyderabad city buses of TSRTC.</H4> -->
+                              <p>Dashboard information:</p>
+                                  <ol>
+                                    <li><H4>RAW DATA: <span>In this page two levels of data filters are available.</span></H4></li>
+                                        <ul>
+                                          <li>This dashboard show a data view for route summary and stop summary for the city buses of TSRTC.</li><br>
+                                          <li>Route or Stop selection = "ALL" or a value from drop-down. Initial view shows data from all routes and stops.</li><br>
+                                          <li>Date Range selection = Today, Past Week, Past Month, or Custom Date Range. Initial view shows data from previous day.</li>
+                                        </ul><br>
+                                    <li>Please also use the top navigation bar to view data at 
+                                      <span style="font-weight:bold">HOME</span>, or 
+                                      <span style="font-weight:bold">BUS STOP</span>, or 
+                                      <span style="font-weight:bold">ROUTE</span> level.
+                                  </ol>
+                        
+                                    </p>
+                                    <img src="Metro_bus.jpg" width="60%" height="30%"/>
 
-        for (k = 0; k < accord.length; k++) {
-            accord[k].addEventListener("click", function() {
-            this.classList.toggle("active");
-            var panel = this.nextElementSibling;
-            //  console.log(panel);
-            if (panel.style.display === "block") {
-                panel.style.display = "none";
-            } else {
-                panel.style.display = "block";
-            }
-            });
-        }
 
-    function toggle_visibility(id) {
-        var e = document.getElementById(id);
-        if(e.style.display == 'flex') {
-            e.style.display = 'none';
-        } else {
-            e.style.display = 'flex';
-        }
-    }
+                                </div>
+                             </div>
+                         </div>
+                         <div class="charts-row">
+                                <div class="charts-card">
+                                    <div class="chart-render" id="dashboard_welcome_div">
+                                            <div id="route_table_div" ></div>
+                                    </div>
+                                </div>
+                                <div class="charts-card">
+                                    <div class="chart-render" id="dashboard_welcome_div">
+                                            <div id="stop_table_div" ></div>
+                                    </div>
+                                </div>
+                         </div>
+                    </div>
+                </div>
+                            
+                <!-- <div id="route_table_div" ></div>
+                <div id="stop_table_div" ></div> -->
+        <!-- </div>    -->
 
-        </script>
-    </body>
-    </html>
+  <div class="footer-container">
+      <p id="footer_tab">powered by <a href="https://blue-ravine.com" target="_blank">Blue Ravine Technologies.</a></p>
+  </div>
+</div>
+<script>
+
+  function openNav() {
+    document.getElementById("mySidenav").style.width = "250px";
+    document.getElementById("main-container-id").style.marginLeft = "250px";
+}
+
+function closeNav() {
+    document.getElementById("mySidenav").style.width = "0";
+    document.getElementById("main-container-id").style.marginLeft = "0";
+}
+
+   </script>
+</body>
+</html>
