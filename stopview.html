@@ -1,7 +1,8 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">    <link rel="stylesheet" type="text/css" href="googlecharts.css"/>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="stopview.css"/>
       <!--Load the AJAX API-->
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script>
@@ -244,9 +245,9 @@
         var revenueroutequery = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=StopView&headers=1', opts);
 
         (stop && (stop !== 'ALL'))
-                ? (startDate ? (endDate ? revenueroutequery.setQuery(`select A, MAX(E) where F = '${stop}' and B >= date '${startDate}' and B <= date '${endDate}' group by A order by MAX(E) desc limit 1`)
-                             : revenueroutequery.setQuery(`select A, MAX(E) where F = '${stop}' and B >= date '${startDate}' group by A order by MAX(E) desc limit 1`))
-                      : revenueroutequery.setQuery(`select A, MAX(E) where F = '${stop}' group by A order by MAX(E) desc limit 1`))
+                ? (startDate ? (endDate ? revenueroutequery.setQuery(`select A, MAX(E) where A = '${stop}' and B >= date '${startDate}' and B <= date '${endDate}' group by A order by MAX(E) desc limit 1`)
+                             : revenueroutequery.setQuery(`select A, MAX(E) where A = '${stop}' and B >= date '${startDate}' group by A order by MAX(E) desc limit 1`))
+                      : revenueroutequery.setQuery(`select A, MAX(E) where A = '${stop}' group by A order by MAX(E) desc limit 1`))
                 : (startDate ? (endDate ? revenueroutequery.setQuery(`select A, MAX(E) where B >= date '${startDate}' and B <= date '${endDate}' group by A order by MAX(E) desc limit 1`)
                              : revenueroutequery.setQuery(`select A, MAX(E) where B >= date '${startDate}' group by A order by MAX(E) desc limit 1`))
                      : revenueroutequery.setQuery('select A, MAX(E) group by A order by MAX(E) desc limit 1'));
@@ -359,7 +360,7 @@
           var revenueroutedata = response.getDataTable();
 
         try {
-          document.getElementById('most_boarded_stop').innerHTML = revenueroutedata.getValue(0,1)
+          document.getElementById('most_boarded_stop').innerHTML = numberWithCommas(revenueroutedata.getValue(0,1))
            + '<br><span style="font-size:1vw"}>(Stop : ' + revenueroutedata.getValue(0,0) + ')</span>';
         }
         catch(err) {
@@ -432,8 +433,8 @@
 <div class="main-container" id="main-container-id">
       <div class="navbar">
           <a href="googlecharts.html"><i class="fa fa-home"></i>   HOME</a>
-          <a href="stopview.html" class="active-page"><i class="fas fa-map-pin"></i>   BUS STOP</a>
           <a href="routeview.html"><i class="fas fa-route"></i>   ROUTE</a>
+          <a href="stopview.html" class="active-page"><i class="fas fa-map-pin"></i>   BUS STOP</a>
           <a href="rawdata.html"><i class="fas fa-table"></i>   RAWDATA</a>
         </div>
       <div class="header-container" id="header-continer-id">
@@ -719,12 +720,13 @@
                   <div class="charts-card">
                   <div class="chart-render" id="dashboard_welcome_div">
                     <p id="chart-text-id">
-                      <H1>Welcome to operational metrics dashboard!</H1>
-                      <H4>This dashboard summarizes metrics at city level, or individual stop level of Hyderabad city buses of TSRTC.</H4>
-                      <p>This dashboard consists of the below pages:</p>
+                      <!-- <H1>Welcome to operational metrics dashboard!</H1> -->
+                      <!-- <H4>This dashboard summarizes metrics at city level, or individual stop level of Hyderabad city buses of TSRTC.</H4> -->
+                      <p>Dashboard information:</p>
                           <ol>
                             <li><H4>BUS STOP: <span>In this page two levels of data filters available.</span></H4></li>
                                 <ul>
+                                  <li>This dashboard summarizes metrics at city level, or individual stop level of Hyderabad city buses of TSRTC.</li><br>
                                   <li>Stop selection = "ALL" or a value from drop-down. Initial view shows data from all stops.</li><br>
                                   <li>Date Range selection = Today, Past Week, Past Month, or Custom Date Range. Initial view shows data from previous day.</li>
                                 </ul><br>
