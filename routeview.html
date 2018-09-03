@@ -144,7 +144,7 @@
                                                         : (`select A, SUM(C) where B >= date '${startDate}' group by A order by SUM(C) limit 10`))
                                              : ('select A, SUM(C) group by A order by SUM(C) limit 10'));
 
-    lowcrowdedwrap.setChartType('LineChart');
+    lowcrowdedwrap.setChartType('ScatterChart');
     lowcrowdedwrap.setDataSourceUrl('https://docs.google.com/spreadsheets/d/1-WBtaG4oTf8p0ypzWaKemvsKBH3SjTlaOu5dWGXF2v0/edit?usp=sharing&sheet=RouteView&headers=1');
     lowcrowdedwrap.setContainerId('column_chart_div');
     lowcrowdedwrap.setQuery(lowcrowdedsql);
@@ -1484,18 +1484,15 @@
             
         <div class = "data-container">
         <div class="highlights-container">
-                  <div class="summary-card" style="--summarybgcolor: rgb(255, 0, 200); --summarytextcolor: white">
-                      <img src="TSRTC_LOGO.png" width="60%" height="100%"/>
-                  </div>
                   <div class="summary-card" style="--summarybgcolor: rgb(3, 88, 109); --summarytextcolor: white">
                     <div id="total_passengers_div">
                       <p id="total_passengers_title">TOTAL PASSENGERS<br><br>
                         <span id="total_passengers" class="summary_metric">calculating...</span></p>
                     </div>
                   </div>
-                  <div class="summary-card" style="--summarybgcolor: rgb(124, 30, 93); --summarytextcolor: white">
-                      <img class="chart-text" src="TSRTC's_Metro_Deluxe_Bus.jpg" height=100% width=100%/>
-                    </div>
+                  <div class="summary-card" style="--summarybgcolor: rgb(255, 0, 200); --summarytextcolor: white">
+                      <img src="TSRTC_LOGO.png" width="60%" height="100%"/>
+                  </div>
                         <div class="summary-card" style="--summarybgcolor: greenyellow; --summarytextcolor: black">
                     <div id="most_revenue_route_div">
                       <p id="most_revenue_route_title">MOST REVENUE ROUTE<br><br>
